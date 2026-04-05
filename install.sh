@@ -33,7 +33,9 @@ ROOT_FILES=(
 
 PLUGINS=(
   "typescript-check.ts"
+  "lint-check.ts"
   "pre-commit-guard.ts"
+  "bash-guard.ts"
   "session-notify.ts"
   "env-protection.ts"
   "flutter-check.ts"
@@ -319,7 +321,7 @@ echo "  Agents   : $TOTAL_AGENTS"
 echo "  Commands : $TOTAL_COMMANDS  (slash commands, e.g. /plan, /tdd, /review)"
 echo "  Skills   : $TOTAL_SKILLS"
 echo "  Rules    : $TOTAL_RULES  (modular instruction sets)"
-echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, pre-commit-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress)"
+echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, lint-check, pre-commit-guard, bash-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress)"
 echo "  Tools    : $TOTAL_TOOLS  (run-tests, git-summary, changed-files, security-audit)"
 echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
 
