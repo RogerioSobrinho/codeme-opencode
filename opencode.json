@@ -49,7 +49,10 @@
     },
     "context7": {
       "type": "remote",
-      "url": "https://mcp.context7.com/mcp"
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+      }
     },
     "gh_grep": {
       "type": "remote",
@@ -68,6 +71,7 @@
       "description": "Expert planning specialist. Analyzes requirements, identifies risks, proposes 3 architectural options, produces a structured implementation plan. Writes zero code — waits for user confirmation before anything is implemented. Use before starting any significant change.",
       "mode": "subagent",
       "model": "github-copilot/claude-opus-4.6",
+      "color": "#c084fc",
       "temperature": 0.1,
       "prompt": "{file:./agents/planner.md}",
       "permission": {
@@ -85,6 +89,7 @@
       "description": "Expert system design specialist. Analyzes requirements, proposes 3 architecture options with trade-offs, recommends one, and generates an Architecture Decision Record (ADR). Use when designing a new service, choosing between patterns, planning a major refactor, or when asked 'how should we structure this?'",
       "mode": "subagent",
       "model": "github-copilot/claude-opus-4.6",
+      "color": "#c084fc",
       "temperature": 0.1,
       "prompt": "{file:./agents/architect.md}",
       "permission": {
@@ -101,6 +106,7 @@
       "description": "Handles the full lifecycle of adding a feature — from codebase exploration, requirements, and architecture options through TDD implementation and self-review. Use when you want to build something new end-to-end. Never needs to switch to another agent.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.3-codex",
+      "color": "#34d399",
       "temperature": 0.3,
       "prompt": "{file:./agents/new-feature.md}",
       "permission": {
@@ -122,6 +128,7 @@
       "description": "Reviews code changes for bugs, security vulnerabilities, logic errors, and architecture violations. Never comments on style or formatting. Every finding includes file, line, root cause, and concrete fix. Use when reviewing staged changes, a PR diff, or specific files before merging.",
       "mode": "subagent",
       "model": "github-copilot/claude-sonnet-4.6",
+      "color": "#60a5fa",
       "temperature": 0.1,
       "prompt": "{file:./agents/code-review.md}",
       "permission": {
@@ -138,6 +145,7 @@
       "description": "Deep security audit: OWASP Top 10, dependency CVE scan, auth/authorization review, input validation, secrets exposure. Every finding mapped to severity with concrete fix. Use for security-critical code, before releases, or when asked to audit for vulnerabilities.",
       "mode": "subagent",
       "model": "github-copilot/claude-opus-4.6",
+      "color": "#c084fc",
       "temperature": 0.1,
       "prompt": "{file:./agents/security-auditor.md}",
       "permission": {
@@ -154,6 +162,7 @@
       "description": "Enforces RED→GREEN→REFACTOR strictly. Writes a failing test first, minimal passing code next, refactors last, verifies coverage at 80%+. Supports TypeScript (Jest/Vitest/Playwright), Python (pytest), Java (JUnit5+Mockito), and Go (testing package). Use when writing new features or fixing bugs with TDD.",
       "mode": "subagent",
       "model": "github-copilot/claude-sonnet-4.6",
+      "color": "#60a5fa",
       "temperature": 0.1,
       "prompt": "{file:./agents/tdd-guide.md}",
       "permission": {
@@ -175,6 +184,7 @@
       "description": "Focused purely on build-time errors across any stack: TypeScript (tsc), Node/npm, Python (mypy/pip), Java (Maven/Gradle), Go (go build). Classifies the error type and applies a targeted fix. Use when the build fails and you want a specialist.",
       "mode": "subagent",
       "model": "github-copilot/grok-code-fast-1",
+      "color": "#f87171",
       "temperature": 0.1,
       "steps": 10,
       "hidden": true,
@@ -198,6 +208,7 @@
       "description": "Maps blast radius of a refactor, proposes 3 options with trade-offs, applies incrementally with test verification after each step. Never breaks existing behavior. Use when restructuring code, removing duplication, or improving architecture without adding features.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.3-codex",
+      "color": "#34d399",
       "temperature": 0.3,
       "prompt": "{file:./agents/refactor.md}",
       "permission": {
@@ -217,6 +228,7 @@
       "description": "Writes and maintains documentation: README, JSDoc/TSDoc, OpenAPI annotations, Architecture Decision Records (ADR), codemaps. Triggered by phrase: 'readme', 'jsdoc', 'openapi', 'adr', 'codemap'. Lightweight documentation specialist.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.4-mini",
+      "color": "#94a3b8",
       "temperature": 0.3,
       "prompt": "{file:./agents/doc-writer.md}",
       "permission": {
@@ -232,6 +244,7 @@
       "description": "Fast read-only agent for exploring codebases. Cannot modify files. Use when you need to quickly find files by patterns, search code for keywords, understand architecture, trace a behavior, or answer questions about the codebase. Runs find/grep first, answers second.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.4-mini",
+      "color": "#94a3b8",
       "temperature": 0.1,
       "hidden": true,
       "prompt": "{file:./agents/explore.md}",
@@ -251,6 +264,7 @@
       "description": "Diagnoses and fixes build/test/runtime failures. Runs the failing command immediately, classifies failure type (compilation, dependency conflict, test failure, runtime), applies surgical fix, re-runs to verify. Max 3 attempts with different approaches.",
       "mode": "subagent",
       "model": "github-copilot/grok-code-fast-1",
+      "color": "#f87171",
       "temperature": 0.1,
       "steps": 10,
       "prompt": "{file:./agents/fix.md}",
@@ -271,6 +285,7 @@
       "description": "Reviews an existing GitHub PR using git diff. Produces tiered review (CRITICAL/HIGH/MEDIUM) for any diff. Useful for async review and CI gate checks. Use with /pr-review <branch> or /pr-review <number>.",
       "mode": "subagent",
       "model": "github-copilot/claude-sonnet-4.6",
+      "color": "#60a5fa",
       "temperature": 0.1,
       "prompt": "{file:./agents/pr-review.md}",
       "permission": {
@@ -287,6 +302,7 @@
       "description": "Multi-agent workflow coordinator. Decomposes complex tasks into independent subtasks, assigns each to the right specialized subagent, coordinates execution (sequential or parallel), and synthesizes results. Use for large features, full-stack tasks, or any work requiring multiple specialists.",
       "mode": "subagent",
       "model": "github-copilot/claude-opus-4.6",
+      "color": "#c084fc",
       "temperature": 0.3,
       "prompt": "{file:./agents/orchestrator.md}",
       "permission": {
@@ -308,6 +324,7 @@
       "description": "Specialized review for TypeScript and React/Node.js code. Catches `any` leaks, unsound assertions, missing `await`, unsafe type casts, hook rule violations, and missing error handling. Same tiered format as code-review but TypeScript-specific.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.3-codex",
+      "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/typescript-reviewer.md}",
       "permission": {
@@ -324,6 +341,7 @@
       "description": "Specialized review for Python code. Catches blocking I/O in async context, missing type hints, SQL injection via f-strings, bare `except`, and Pydantic `Any` fields. Same tiered format as code-review but Python-specific.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.3-codex",
+      "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/python-reviewer.md}",
       "permission": {
@@ -340,6 +358,7 @@
       "description": "Reads project structure, dependencies, existing code patterns, and conventions. Generates AGENTS.md (universal agent context) and .opencode/opencode.json (project-specific config). Run once per project to bootstrap AI agent context. Use at the start of a new project or when onboarding to an unfamiliar codebase.",
       "mode": "subagent",
       "model": "github-copilot/gemini-2.5-pro",
+      "color": "#fb923c",
       "temperature": 0.3,
       "prompt": "{file:./agents/init-project.md}",
       "permission": {
@@ -356,6 +375,7 @@
       "description": "Reads git diff --staged and generates a conventional commit message with type, scope, subject, and body. Copy-paste ready. Lightweight — uses haiku model. Use after staging your changes.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5-mini",
+      "color": "#94a3b8",
       "temperature": 0.1,
       "hidden": true,
       "prompt": "{file:./agents/write-commit.md}",
@@ -373,6 +393,7 @@
       "description": "Specialized review for Flutter/Dart code with Riverpod. Catches ref.watch misuse, BuildContext-after-await crashes, missing const constructors, controller leaks, setState in async without mounted guard, and N+1 rebuild patterns. Same tiered format as code-review but Flutter-specific.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.3-codex",
+      "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/flutter-reviewer.md}",
       "permission": {
@@ -389,6 +410,7 @@
       "description": "Specialized review for Java 21 and Spring Boot 3.x code. Catches swallowed exceptions, @Transactional on private methods, self-invocation proxy bypass, entity exposure in REST responses, N+1 EAGER fetch, missing @Valid, SQL injection via string concat, and resource leaks. Same tiered format as code-review but Java-specific.",
       "mode": "subagent",
       "model": "github-copilot/gpt-5.3-codex",
+      "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/java-reviewer.md}",
       "permission": {
