@@ -27,7 +27,7 @@ function findTsConfig(startDir: string): string | null {
   return null
 }
 
-export const TypeScriptCheckPlugin: Plugin = async ({ $ }) => {
+export const TypeScriptCheckPlugin: Plugin = async ({ $, client }) => {
   return {
     "tool.execute.after": async (input) => {
       if (input.tool !== "edit") return
@@ -48,7 +48,14 @@ export const TypeScriptCheckPlugin: Plugin = async ({ $ }) => {
       } catch (err: unknown) {
         const output = (err as { stdout?: string })?.stdout ?? String(err)
         if (output.trim()) {
-          console.error(`[typescript-check] tsc errors in ${path.basename(filePath)}:\n${output}`)
+          await client.app.log({
+            body: {
+              service: "typescript-check",
+              level: "warn",
+              message: `tsc errors in ${path.basename(filePath)}:\n${output}`,
+              extra: { file: path.basename(filePath) },
+            },
+          })
         }
       }
     },

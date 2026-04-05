@@ -1,7 +1,7 @@
 ---
 description: Deep security audit — OWASP Top 10, dependency CVE scan, auth/authorization review, input validation, secrets exposure. Every finding mapped to severity with concrete fix. Use for security-critical code, before releases, or when asked to audit for vulnerabilities.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-opus-4.6
 permission:
   edit: deny
   bash:

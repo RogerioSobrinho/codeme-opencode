@@ -1,7 +1,7 @@
 ---
 description: Multi-agent workflow coordinator. Decomposes complex tasks into independent subtasks, assigns each to the right specialized subagent, coordinates execution (sequential or parallel), and synthesizes results. Use for large features, full-stack tasks, or any work requiring multiple specialists.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-opus-4.6
 permission:
   task:
     "*": allow

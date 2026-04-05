@@ -80,7 +80,7 @@ async function isRuffAvailable($: (strings: TemplateStringsArray, ...values: unk
   }
 }
 
-export const LintCheckPlugin: Plugin = async ({ $ }) => {
+export const LintCheckPlugin: Plugin = async ({ $, client }) => {
   return {
     "tool.execute.after": async (input) => {
       if (input.tool !== "edit") return
@@ -105,9 +105,14 @@ export const LintCheckPlugin: Plugin = async ({ $ }) => {
             (err as { stderr?: string })?.stderr ??
             String(err)
           if (output.trim()) {
-            console.error(
-              `[lint-check] ESLint errors in ${path.basename(filePath)}:\n${output.trim()}`,
-            )
+            await client.app.log({
+              body: {
+                service: "lint-check",
+                level: "warn",
+                message: `ESLint errors in ${path.basename(filePath)}:\n${output.trim()}`,
+                extra: { file: path.basename(filePath), linter: "eslint" },
+              },
+            })
           }
         }
         return
@@ -126,9 +131,14 @@ export const LintCheckPlugin: Plugin = async ({ $ }) => {
             (err as { stderr?: string })?.stderr ??
             String(err)
           if (output.trim()) {
-            console.error(
-              `[lint-check] ruff errors in ${path.basename(filePath)}:\n${output.trim()}`,
-            )
+            await client.app.log({
+              body: {
+                service: "lint-check",
+                level: "warn",
+                message: `ruff errors in ${path.basename(filePath)}:\n${output.trim()}`,
+                extra: { file: path.basename(filePath), linter: "ruff" },
+              },
+            })
           }
         }
       }

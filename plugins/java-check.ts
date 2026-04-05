@@ -41,7 +41,7 @@ function findPomXml(startDir: string): string | null {
   return null
 }
 
-async function runMvnCompile(projectRoot: string): Promise<void> {
+async function runMvnCompile(projectRoot: string, log: (body: { service: string; level: string; message: string; extra?: Record<string, unknown> }) => Promise<unknown>): Promise<void> {
   try {
     await execFileAsync("mvn", ["compile", "-q", "--batch-mode"], {
       cwd: projectRoot,
@@ -61,12 +61,20 @@ async function runMvnCompile(projectRoot: string): Promise<void> {
       .join("\n")
 
     if (errorLines) {
-      console.error(`[java-check] mvn compile errors in ${path.basename(projectRoot)}:\n${errorLines}`)
+      await log({
+        service: "java-check",
+        level: "warn",
+        message: `mvn compile errors in ${path.basename(projectRoot)}:\n${errorLines}`,
+        extra: { project: path.basename(projectRoot) },
+      })
     }
   }
 }
 
-export const JavaCheckPlugin: Plugin = async () => {
+export const JavaCheckPlugin: Plugin = async ({ client }) => {
+  const log = (body: { service: string; level: string; message: string; extra?: Record<string, unknown> }) =>
+    client.app.log({ body })
+
   return {
     "tool.execute.after": async (input) => {
       if (process.env.OPENCODE_NO_JAVA_CHECK === "1") return
@@ -85,7 +93,7 @@ export const JavaCheckPlugin: Plugin = async () => {
 
       const handle = setTimeout(() => {
         pending.delete(projectRoot)
-        runMvnCompile(projectRoot).catch(() => {/* already handled inside */})
+        runMvnCompile(projectRoot, log).catch(() => {/* already handled inside */})
       }, DEBOUNCE_MS)
 
       pending.set(projectRoot, handle)

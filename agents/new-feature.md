@@ -1,7 +1,7 @@
 ---
 description: Handles the full lifecycle of adding a feature — from codebase exploration, requirements, and architecture options through TDD implementation and self-review. Never needs to switch to another agent. Use when you want to build something new end-to-end.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/gpt-5.3-codex
 permission:
   bash:
     "*": ask

@@ -1,7 +1,7 @@
 ---
 description: Specialized review for Python code. Catches blocking I/O in async context, missing type hints, SQL injection via f-strings, bare `except`, and Pydantic `Any` fields. Same tiered format as code-review but Python-specific.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/gpt-5.3-codex
 permission:
   edit: deny
   bash:

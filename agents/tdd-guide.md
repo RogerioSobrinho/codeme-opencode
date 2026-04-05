@@ -1,7 +1,7 @@
 ---
 description: Enforces RED→GREEN→REFACTOR strictly. Writes a failing test first, minimal passing code next, refactors last, verifies coverage at 80%+. Supports TypeScript (Jest/Vitest/Playwright), Python (pytest), Java (JUnit5+Mockito), and Go (testing package). Use when writing new features or fixing bugs with TDD.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-sonnet-4.6
 permission:
   bash:
     "*": ask

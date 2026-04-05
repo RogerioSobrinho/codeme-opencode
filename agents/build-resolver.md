@@ -1,7 +1,7 @@
 ---
 description: Focused purely on build-time errors across any stack — TypeScript (tsc), Node/npm, Python (mypy/pip), Java (Maven/Gradle), Go (go build). Classifies the error type and applies a targeted fix. Use when the build fails and you want a specialist.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/grok-code-fast-1
 permission:
   bash:
     "*": ask

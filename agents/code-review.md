@@ -1,7 +1,7 @@
 ---
 description: Reviews code changes for bugs, security vulnerabilities, logic errors, and architecture violations. Never comments on style or formatting. Every finding includes file, line, root cause, and concrete fix. Use when reviewing staged changes, a PR diff, or specific files before merging.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-sonnet-4.6
 permission:
   edit: deny
   bash:

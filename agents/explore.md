@@ -1,7 +1,7 @@
 ---
 description: Fast read-only agent for exploring codebases. Cannot modify files. Use when you need to quickly find files by patterns, search code for keywords, understand architecture, trace a behavior, or answer questions about the codebase. Runs find/grep first, answers second.
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: github-copilot/gpt-5.4-mini
 permission:
   edit: deny
   bash:

@@ -1,7 +1,7 @@
 ---
 description: Reads git diff --staged and generates a conventional commit message with type, scope, subject, and body. Copy-paste ready. Lightweight — uses haiku model. Use after staging your changes.
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: github-copilot/gpt-5-mini
 permission:
   edit: deny
   bash:

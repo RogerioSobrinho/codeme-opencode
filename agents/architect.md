@@ -1,7 +1,7 @@
 ---
 description: Expert system design specialist. Analyzes requirements, proposes 3 architecture options with trade-offs, recommends one, and generates an Architecture Decision Record (ADR). Use when designing a new service, choosing between patterns (event-driven vs REST, microservice vs monolith), planning a major refactor, or when asked 'how should we structure this?'
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-opus-4.6
 permission:
   edit: deny
   bash:

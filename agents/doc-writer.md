@@ -1,7 +1,7 @@
 ---
 description: Writes and maintains documentation — README, JSDoc/TSDoc, OpenAPI annotations, Architecture Decision Records (ADR), codemaps. Triggered by phrase 'readme', 'jsdoc', 'openapi', 'adr', 'codemap'. Lightweight documentation specialist.
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: github-copilot/gpt-5.4-mini
 permission:
   bash:
     "*": allow

@@ -104,7 +104,6 @@ SKILLS=(
   "git-workflow"
   "github-actions"
   "golang-patterns"
-  "iterative-retrieval"
   "java-patterns"
   "multiagent-orchestration"
   "node-patterns"

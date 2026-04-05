@@ -1,6 +1,6 @@
 # codme-opencode
 
-Global configuration installer for [OpenCode](https://opencode.ai) — ships 19 specialized agents, 11 slash commands, 29 skills, 6 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
+Global configuration installer for [OpenCode](https://opencode.ai) — ships 19 specialized agents, 11 slash commands, 29 skills, 11 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
 
 Requires a **GitHub Copilot Pro+** subscription. All agents use the `github-copilot` provider.
 
@@ -32,7 +32,7 @@ Deploys to `~/.config/opencode/`:
 | `commands/` | 11 slash commands |
 | `skills/` | 29 skill packs |
 | `rules/` | 7 modular rule sets |
-| `plugins/` | 6 quality-guard plugins |
+| `plugins/` | 11 quality-guard plugins |
 
 Company-specific skills (`company-*`) are never overwritten.
 
@@ -139,7 +139,12 @@ Quality-guard plugins that run automatically during OpenCode sessions:
 | Plugin | Trigger |
 |---|---|
 | `typescript-check.ts` | Runs `tsc --noEmit` after TypeScript file edits |
+| `lint-check.ts` | Runs ESLint (JS/TS) or ruff (Python) after file edits |
 | `pre-commit-guard.ts` | Blocks commits with debug artifacts (`console.log`, `debugger`, `print()`, `System.out.println`) |
+| `bash-guard.ts` | Blocks destructive shell commands (rm -rf on root paths, DROP TABLE, git push --force) |
+| `todo-progress.ts` | Logs structured progress on every TodoWrite update |
+| `compaction.ts` | Replaces default compaction prompt with a structured continuation brief |
+| `shell-env.ts` | Injects `PROJECT_ROOT`, `PACKAGE_MANAGER`, `PRIMARY_LANGUAGE` into every bash call |
 | `session-notify.ts` | Desktop notification when a long-running session completes |
 | `env-protection.ts` | Prevents `.env` files from being written or overwritten |
 | `flutter-check.ts` | Runs `flutter analyze` after Dart file edits |

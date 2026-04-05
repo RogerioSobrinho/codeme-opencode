@@ -44,7 +44,7 @@ async function commandExists(cmd: string): Promise<boolean> {
   }
 }
 
-export const FlutterCheckPlugin: Plugin = async () => {
+export const FlutterCheckPlugin: Plugin = async ({ client }) => {
   return {
     "tool.execute.after": async (input) => {
       if (process.env.OPENCODE_NO_FLUTTER_CHECK === "1") return
@@ -73,7 +73,14 @@ export const FlutterCheckPlugin: Plugin = async () => {
         })
         const output = (stdout + stderr).trim()
         if (output && !/No issues found/.test(output)) {
-          console.error(`[flutter-check] ${cmd} analyze:\n${output}`)
+          await client.app.log({
+            body: {
+              service: "flutter-check",
+              level: "warn",
+              message: `${cmd} analyze:\n${output}`,
+              extra: { file: path.basename(filePath), cmd },
+            },
+          })
         }
       } catch (err: unknown) {
         const out =
@@ -81,7 +88,14 @@ export const FlutterCheckPlugin: Plugin = async () => {
           (err as { stderr?: string })?.stderr ??
           String(err)
         if (out.trim()) {
-          console.error(`[flutter-check] analysis warnings in ${path.basename(filePath)}:\n${out.trim()}`)
+          await client.app.log({
+            body: {
+              service: "flutter-check",
+              level: "warn",
+              message: `analysis warnings in ${path.basename(filePath)}:\n${out.trim()}`,
+              extra: { file: path.basename(filePath), cmd },
+            },
+          })
         }
       }
     },

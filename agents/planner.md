@@ -1,7 +1,7 @@
 ---
 description: Expert planning specialist. Analyzes requirements, identifies risks, proposes 3 architectural options, produces a structured implementation plan. Writes zero code — waits for user confirmation before anything is implemented. Use before starting any significant change.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-opus-4.6
 permission:
   edit: deny
   bash:

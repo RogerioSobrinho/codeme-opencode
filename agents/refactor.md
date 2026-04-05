@@ -1,7 +1,7 @@
 ---
 description: Maps blast radius of a refactor, proposes 3 options with trade-offs, applies incrementally with test verification after each step. Never breaks existing behavior. Use when restructuring code, removing duplication, or improving architecture without adding features.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/gpt-5.3-codex
 permission:
   bash:
     "*": ask

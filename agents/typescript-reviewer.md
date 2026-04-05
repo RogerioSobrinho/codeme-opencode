@@ -1,7 +1,7 @@
 ---
 description: Specialized review for TypeScript and React/Node.js code. Catches `any` leaks, unsound assertions, missing `await`, unsafe type casts, hook rule violations, and missing error handling. Same tiered format as code-review but TypeScript-specific.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/gpt-5.3-codex
 permission:
   edit: deny
   bash:

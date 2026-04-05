@@ -38,7 +38,7 @@ function extractCommitMessage(command: string): string | null {
   return match ? (match[2] ?? match[1]) : null
 }
 
-export const PreCommitGuardPlugin: Plugin = async ({ $ }) => {
+export const PreCommitGuardPlugin: Plugin = async ({ $, client }) => {
   return {
     "tool.execute.before": async (input, output) => {
       if (input.tool !== "bash") return
@@ -102,12 +102,17 @@ export const PreCommitGuardPlugin: Plugin = async ({ $ }) => {
       // ── 4. Conventional Commits warning (non-blocking) ─────────────────────
       const commitMsg = extractCommitMessage(command)
       if (commitMsg && !CONVENTIONAL_RE.test(commitMsg.split("\n")[0])) {
-        console.error(
-          `[pre-commit-guard] WARNING: Commit message does not follow Conventional Commits.\n` +
-          `  Got:      "${commitMsg.split("\n")[0]}"\n` +
-          `  Expected: type(scope): description\n` +
-          `  Types:    feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`
-        )
+        await client.app.log({
+          body: {
+            service: "pre-commit-guard",
+            level: "warn",
+            message:
+              `Commit message does not follow Conventional Commits.\n` +
+              `  Got:      "${commitMsg.split("\n")[0]}"\n` +
+              `  Expected: type(scope): description\n` +
+              `  Types:    feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`,
+          },
+        })
       }
     },
   }

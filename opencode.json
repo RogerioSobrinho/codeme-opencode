@@ -28,7 +28,12 @@
       ".git/**",
       "build/**",
       ".dart_tool/**",
-      "target/**"
+      "target/**",
+      ".next/**",
+      "coverage/**",
+      ".venv/**",
+      "__pycache__/**",
+      "*.pyc"
     ]
   },
 
@@ -60,18 +65,18 @@
     }
   },
 
-  "tools": {
-    "sequential-thinking_*": false,
-    "memory_*": false,
-    "context7_*": false,
-    "gh_grep_*": false
-  },
-
   "permission": {
     "bash": "ask",
     "edit": "allow",
-    "webfetch": "allow"
+    "webfetch": "allow",
+    "sequential-thinking_*": "deny",
+    "memory_*": "deny",
+    "context7_*": "deny",
+    "gh_grep_*": "deny",
+    "doom_loop": "deny"
   },
+
+  "default_agent": "build",
 
   "agent": {
     "planner": {
@@ -81,10 +86,8 @@
       "color": "#c084fc",
       "temperature": 0.1,
       "prompt": "{file:./agents/planner.md}",
-      "tools": {
-        "sequential-thinking_*": true
-      },
       "permission": {
+        "sequential-thinking_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -102,10 +105,8 @@
       "color": "#c084fc",
       "temperature": 0.1,
       "prompt": "{file:./agents/architect.md}",
-      "tools": {
-        "sequential-thinking_*": true
-      },
       "permission": {
+        "sequential-thinking_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -122,11 +123,9 @@
       "color": "#34d399",
       "temperature": 0.3,
       "prompt": "{file:./agents/new-feature.md}",
-      "tools": {
-        "context7_*": true,
-        "memory_*": true
-      },
       "permission": {
+        "context7_*": "allow",
+        "memory_*": "allow",
         "bash": {
           "*": "ask",
           "npm test*": "allow",
@@ -148,10 +147,8 @@
       "color": "#60a5fa",
       "temperature": 0.1,
       "prompt": "{file:./agents/code-review.md}",
-      "tools": {
-        "gh_grep_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -168,11 +165,9 @@
       "color": "#c084fc",
       "temperature": 0.1,
       "prompt": "{file:./agents/security-auditor.md}",
-      "tools": {
-        "sequential-thinking_*": true,
-        "gh_grep_*": true
-      },
       "permission": {
+        "sequential-thinking_*": "allow",
+        "gh_grep_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -189,10 +184,8 @@
       "color": "#60a5fa",
       "temperature": 0.1,
       "prompt": "{file:./agents/tdd-guide.md}",
-      "tools": {
-        "context7_*": true
-      },
       "permission": {
+        "context7_*": "allow",
         "bash": {
           "*": "ask",
           "npm test*": "allow",
@@ -238,10 +231,8 @@
       "color": "#34d399",
       "temperature": 0.3,
       "prompt": "{file:./agents/refactor.md}",
-      "tools": {
-        "context7_*": true
-      },
       "permission": {
+        "context7_*": "allow",
         "bash": {
           "*": "ask",
           "npm test*": "allow",
@@ -261,10 +252,8 @@
       "color": "#94a3b8",
       "temperature": 0.3,
       "prompt": "{file:./agents/doc-writer.md}",
-      "tools": {
-        "context7_*": true
-      },
       "permission": {
+        "context7_*": "allow",
         "bash": {
           "*": "allow",
           "git commit*": "deny",
@@ -281,10 +270,8 @@
       "temperature": 0.1,
       "hidden": true,
       "prompt": "{file:./agents/explore.md}",
-      "tools": {
-        "gh_grep_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -324,10 +311,8 @@
       "color": "#60a5fa",
       "temperature": 0.1,
       "prompt": "{file:./agents/pr-review.md}",
-      "tools": {
-        "gh_grep_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -344,12 +329,9 @@
       "color": "#c084fc",
       "temperature": 0.3,
       "prompt": "{file:./agents/orchestrator.md}",
-      "tools": {
-        "sequential-thinking_*": true,
-        "memory_*": true,
-        "todowrite": true
-      },
       "permission": {
+        "sequential-thinking_*": "allow",
+        "memory_*": "allow",
         "task": {
           "*": "allow"
         },
@@ -371,11 +353,9 @@
       "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/typescript-reviewer.md}",
-      "tools": {
-        "gh_grep_*": true,
-        "context7_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
+        "context7_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -392,11 +372,9 @@
       "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/python-reviewer.md}",
-      "tools": {
-        "gh_grep_*": true,
-        "context7_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
+        "context7_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -413,10 +391,8 @@
       "color": "#fb923c",
       "temperature": 0.3,
       "prompt": "{file:./agents/init-project.md}",
-      "tools": {
-        "context7_*": true
-      },
       "permission": {
+        "context7_*": "allow",
         "bash": {
           "*": "allow",
           "git commit*": "deny",
@@ -451,11 +427,9 @@
       "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/flutter-reviewer.md}",
-      "tools": {
-        "gh_grep_*": true,
-        "context7_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
+        "context7_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",
@@ -472,11 +446,9 @@
       "color": "#34d399",
       "temperature": 0.1,
       "prompt": "{file:./agents/java-reviewer.md}",
-      "tools": {
-        "gh_grep_*": true,
-        "context7_*": true
-      },
       "permission": {
+        "gh_grep_*": "allow",
+        "context7_*": "allow",
         "edit": "deny",
         "bash": {
           "*": "allow",

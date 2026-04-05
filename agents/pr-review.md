@@ -1,7 +1,7 @@
 ---
 description: Reviews an existing GitHub PR using git diff. Produces tiered review (CRITICAL/HIGH/MEDIUM) for any diff. Useful for async review and CI gate checks. Use with /pr-review <branch> or /pr-review <number>.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/claude-sonnet-4.6
 permission:
   edit: deny
   bash:

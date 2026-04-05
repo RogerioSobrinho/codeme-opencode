@@ -1,7 +1,7 @@
 ---
 description: Diagnoses and fixes build/test/runtime failures. Runs the failing command immediately, classifies failure type (compilation, dependency conflict, test failure, runtime), applies surgical fix, re-runs to verify. Max 3 attempts with different approaches.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/grok-code-fast-1
 permission:
   bash:
     "*": ask

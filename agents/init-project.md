@@ -1,7 +1,7 @@
 ---
 description: Reads project structure, dependencies, existing code patterns, and conventions. Generates AGENTS.md (universal agent context) and .opencode/opencode.json (project-specific config). Run once per project to bootstrap AI agent context. Use at the start of a new project or when onboarding to an unfamiliar codebase.
 mode: subagent
-model: anthropic/claude-sonnet-4-5
+model: github-copilot/gemini-2.5-pro
 permission:
   bash:
     "*": allow
