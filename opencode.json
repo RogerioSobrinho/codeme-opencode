@@ -1,0 +1,396 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5",
+  "small_model": "anthropic/claude-haiku-4-5",
+  "autoupdate": true,
+  "share": "manual",
+
+  "mcp": {
+    "sequential-thinking": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {
+        "DISABLE_THOUGHT_LOGGING": "false"
+      }
+    },
+    "memory": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "{env:HOME}/.config/opencode/memory.jsonl"
+      }
+    }
+  },
+
+  "permission": {
+    "bash": "ask",
+    "edit": "allow",
+    "webfetch": "allow"
+  },
+
+  "agent": {
+    "planner": {
+      "description": "Expert planning specialist. Analyzes requirements, identifies risks, proposes 3 architectural options, produces a structured implementation plan. Writes zero code — waits for user confirmation before anything is implemented. Use before starting any significant change.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/planner.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "rm -rf*": "deny"
+        }
+      }
+    },
+
+    "architect": {
+      "description": "Expert system design specialist. Analyzes requirements, proposes 3 architecture options with trade-offs, recommends one, and generates an Architecture Decision Record (ADR). Use when designing a new service, choosing between patterns, planning a major refactor, or when asked 'how should we structure this?'",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/architect.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "new-feature": {
+      "description": "Handles the full lifecycle of adding a feature — from codebase exploration, requirements, and architecture options through TDD implementation and self-review. Use when you want to build something new end-to-end. Never needs to switch to another agent.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/new-feature.md}",
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npm run*": "allow",
+          "npx*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git status*": "allow",
+          "find *": "allow",
+          "grep *": "allow"
+        }
+      }
+    },
+
+    "code-review": {
+      "description": "Reviews code changes for bugs, security vulnerabilities, logic errors, and architecture violations. Never comments on style or formatting. Every finding includes file, line, root cause, and concrete fix. Use when reviewing staged changes, a PR diff, or specific files before merging.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/code-review.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "security-auditor": {
+      "description": "Deep security audit: OWASP Top 10, dependency CVE scan, auth/authorization review, input validation, secrets exposure. Every finding mapped to severity with concrete fix. Use for security-critical code, before releases, or when asked to audit for vulnerabilities.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/security-auditor.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "tdd-guide": {
+      "description": "Enforces RED→GREEN→REFACTOR strictly. Writes a failing test first, minimal passing code next, refactors last, verifies coverage at 80%+. Supports TypeScript (Jest/Vitest/Playwright), Python (pytest), Java (JUnit5+Mockito), and Go (testing package). Use when writing new features or fixing bugs with TDD.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/tdd-guide.md}",
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npm run test*": "allow",
+          "npx jest*": "allow",
+          "npx vitest*": "allow",
+          "pytest*": "allow",
+          "go test*": "allow",
+          "find *": "allow",
+          "grep *": "allow"
+        }
+      }
+    },
+
+    "build-resolver": {
+      "description": "Focused purely on build-time errors across any stack: TypeScript (tsc), Node/npm, Python (mypy/pip), Java (Maven/Gradle), Go (go build). Classifies the error type and applies a targeted fix. Use when the build fails and you want a specialist.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/build-resolver.md}",
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "npm*": "allow",
+          "npx*": "allow",
+          "pip*": "allow",
+          "go *": "allow",
+          "mvn*": "allow",
+          "gradle*": "allow",
+          "find *": "allow",
+          "grep *": "allow"
+        }
+      }
+    },
+
+    "refactor": {
+      "description": "Maps blast radius of a refactor, proposes 3 options with trade-offs, applies incrementally with test verification after each step. Never breaks existing behavior. Use when restructuring code, removing duplication, or improving architecture without adding features.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/refactor.md}",
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npm run*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "find *": "allow",
+          "grep *": "allow"
+        }
+      }
+    },
+
+    "doc-writer": {
+      "description": "Writes and maintains documentation: README, JSDoc/TSDoc, OpenAPI annotations, Architecture Decision Records (ADR), codemaps. Triggered by phrase: 'readme', 'jsdoc', 'openapi', 'adr', 'codemap'. Lightweight documentation specialist.",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./agents/doc-writer.md}",
+      "permission": {
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "explore": {
+      "description": "Fast read-only agent for exploring codebases. Cannot modify files. Use when you need to quickly find files by patterns, search code for keywords, understand architecture, trace a behavior, or answer questions about the codebase. Runs find/grep first, answers second.",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./agents/explore.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "rm *": "deny",
+          "mv *": "deny"
+        }
+      }
+    },
+
+    "fix": {
+      "description": "Diagnoses and fixes build/test/runtime failures. Runs the failing command immediately, classifies failure type (compilation, dependency conflict, test failure, runtime), applies surgical fix, re-runs to verify. Max 3 attempts with different approaches.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/fix.md}",
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "npm*": "allow",
+          "npx*": "allow",
+          "go *": "allow",
+          "pip*": "allow",
+          "find *": "allow",
+          "grep *": "allow"
+        }
+      }
+    },
+
+    "pr-review": {
+      "description": "Reviews an existing GitHub PR using git diff. Produces tiered review (CRITICAL/HIGH/MEDIUM) for any diff. Useful for async review and CI gate checks. Use with /pr-review <branch> or /pr-review <number>.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/pr-review.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "orchestrator": {
+      "description": "Multi-agent workflow coordinator. Decomposes complex tasks into independent subtasks, assigns each to the right specialized subagent, coordinates execution (sequential or parallel), and synthesizes results. Use for large features, full-stack tasks, or any work requiring multiple specialists.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/orchestrator.md}",
+      "permission": {
+        "task": {
+          "*": "allow"
+        },
+        "bash": {
+          "*": "ask",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git status*": "allow",
+          "find *": "allow",
+          "grep *": "allow"
+        }
+      }
+    },
+
+    "typescript-reviewer": {
+      "description": "Specialized review for TypeScript and React/Node.js code. Catches `any` leaks, unsound assertions, missing `await`, unsafe type casts, hook rule violations, and missing error handling. Same tiered format as code-review but TypeScript-specific.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/typescript-reviewer.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "python-reviewer": {
+      "description": "Specialized review for Python code. Catches blocking I/O in async context, missing type hints, SQL injection via f-strings, bare `except`, and Pydantic `Any` fields. Same tiered format as code-review but Python-specific.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/python-reviewer.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    },
+
+    "init-project": {
+      "description": "Reads project structure, dependencies, existing code patterns, and conventions. Generates AGENTS.md (universal agent context) and .opencode/opencode.json (project-specific config). Run once per project to bootstrap AI agent context. Use at the start of a new project or when onboarding to an unfamiliar codebase.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "{file:./agents/init-project.md}",
+      "permission": {
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "rm *": "deny"
+        }
+      }
+    },
+
+    "write-commit": {
+      "description": "Reads git diff --staged and generates a conventional commit message with type, scope, subject, and body. Copy-paste ready. Lightweight — uses haiku model. Use after staging your changes.",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./agents/write-commit.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny"
+        }
+      }
+    }
+  },
+
+  "command": {
+    "plan": {
+      "description": "Analyze requirements, surface risks, and produce a structured implementation plan with 3 architectural options. No code written until you confirm.",
+      "template": "Load the planner skill and produce a complete implementation plan for: $ARGUMENTS\n\nInclude: requirements restatement, affected files, step-by-step phases, dependencies, risks (HIGH/MEDIUM/LOW), and complexity estimate. Present 3 architectural options when there are meaningful trade-offs. Wait for my confirmation before any implementation begins.",
+      "agent": "planner",
+      "subtask": true
+    },
+
+    "tdd": {
+      "description": "Implement a feature or fix using strict TDD: write failing test first, minimal code to pass, then refactor. 80%+ coverage required.",
+      "template": "Apply strict TDD for: $ARGUMENTS\n\nFollow RED→GREEN→REFACTOR:\n1. Write the failing test first and run it to confirm it fails\n2. Write minimal code to make it pass\n3. Run tests again to confirm GREEN\n4. Refactor while keeping tests green\n5. Verify coverage >= 80%\n\nNever skip RED. Never write implementation before a failing test exists.",
+      "agent": "tdd-guide",
+      "subtask": true
+    },
+
+    "review": {
+      "description": "Review staged changes or a diff for bugs, security issues, architecture violations. Tiered: CRITICAL/HIGH/MEDIUM. No style comments.",
+      "template": "Review the following code changes for bugs, security vulnerabilities, logic errors, and architecture violations:\n\n!`git diff --staged 2>/dev/null || git diff HEAD~1 2>/dev/null`\n\nReport only real defects — no style comments. Every finding must include: file, approximate line, root cause, and concrete fix. End with verdict: APPROVED / APPROVED WITH NOTES / CHANGES REQUESTED / BLOCKED.",
+      "agent": "code-review",
+      "subtask": true
+    },
+
+    "fix": {
+      "description": "Diagnose and fix the current build/test failure. Runs failing command, classifies root cause, applies surgical fix, re-verifies.",
+      "template": "Diagnose and fix the current failure: $ARGUMENTS\n\nSteps:\n1. Run the failing command to capture the current error\n2. Classify failure type (compilation, dependency, test, runtime)\n3. Apply surgical fix — touch only what is broken\n4. Re-run to verify the fix worked\n5. If still failing after 3 different approaches, explain root cause and ask for direction",
+      "agent": "fix",
+      "subtask": true
+    },
+
+    "secure": {
+      "description": "Full security audit: OWASP Top 10, dependency CVEs, auth/authorization, input validation, secrets exposure.",
+      "template": "Perform a comprehensive security audit${ $ARGUMENTS ? ' focused on: ' + $ARGUMENTS : '' }.\n\nCheck for:\n- OWASP Top 10 vulnerabilities\n- Hardcoded secrets or API keys in source\n- SQL/command injection vectors\n- Authentication and authorization flaws\n- Unsafe input handling\n- Dependency CVEs (run audit tool if available)\n- PII exposure in logs\n\nMap every finding to OWASP category with severity (CRITICAL/HIGH/MEDIUM/LOW) and concrete fix.",
+      "agent": "security-auditor",
+      "subtask": true
+    },
+
+    "refactor": {
+      "description": "Restructure code while preserving behavior. Maps blast radius, proposes 3 options, applies incrementally with test verification.",
+      "template": "Refactor: $ARGUMENTS\n\nSteps:\n1. Map the blast radius — which files and callers are affected\n2. Propose 3 refactoring approaches with trade-offs (mark one RECOMMENDED)\n3. Wait for confirmation before applying\n4. Apply incrementally — verify tests pass after each step\n5. Report: what changed, what tests verify correctness, any remaining debt",
+      "agent": "refactor",
+      "subtask": true
+    },
+
+    "learn": {
+      "description": "Extract reusable patterns from current session into a skill file for future sessions.",
+      "template": "Extract reusable patterns from this session and propose a new skill or update to an existing one.\n\nLook for:\n- Recurring patterns in the code we wrote\n- Decisions made and their rationale\n- Mistakes corrected and what triggered them\n- Architecture choices with clear trade-offs\n\nFormat the output as a SKILL.md file ready to save to skills/<name>/SKILL.md",
+      "agent": "build",
+      "subtask": false
+    },
+
+    "checkpoint": {
+      "description": "Save current progress: run verification gates, summarize state, identify next steps.",
+      "template": "Run a checkpoint for the current work:\n\n1. Run available verification gates: !`npm test 2>/dev/null || go test ./... 2>/dev/null || pytest 2>/dev/null`\n2. Show git status: !`git status --short`\n3. Summarize: what was completed, what is in progress, what remains\n4. List any open issues or TODOs added in this session\n5. Suggest next steps\n\nThis is a progress snapshot — do not make changes.",
+      "agent": "build",
+      "subtask": false
+    },
+
+    "verify": {
+      "description": "Run the full verification pipeline: compile → unit tests → integration tests → coverage → security scan.",
+      "template": "Run the full verification pipeline and report gate-by-gate:\n\n1. Compile / type-check: !`npm run build 2>/dev/null || tsc --noEmit 2>/dev/null || go build ./... 2>/dev/null`\n2. Unit tests: !`npm test 2>/dev/null || go test -short ./... 2>/dev/null || pytest -x 2>/dev/null`\n3. Coverage check (if configured)\n4. Security audit: !`npm audit 2>/dev/null || pip-audit 2>/dev/null`\n\nNever advance past a red gate. Report: PASS/FAIL per gate with details on failures.",
+      "agent": "build",
+      "subtask": false
+    },
+
+    "orchestrate": {
+      "description": "Decompose a complex task into independent subtasks and coordinate multiple specialized agents in parallel.",
+      "template": "Orchestrate the following complex task using multiple specialized agents:\n\n$ARGUMENTS\n\nSteps:\n1. Analyze and decompose into independent subtasks\n2. Identify which agent is best for each subtask\n3. Identify dependencies — which tasks must run sequentially vs in parallel\n4. Execute: launch parallel subagents for independent work, sequential for dependent work\n5. Synthesize results and report what each agent produced",
+      "agent": "orchestrator",
+      "subtask": true
+    },
+
+    "init-project": {
+      "description": "Scan the project and generate AGENTS.md + .opencode/opencode.json with project-specific context. Run once per project.",
+      "template": "Initialize OpenCode context for this project.\n\nScan the codebase and generate:\n1. AGENTS.md — universal agent context (tech stack, architecture, absolute rules, known gotchas)\n2. .opencode/opencode.json — project-specific config with relevant instructions\n\nRead: package.json / pyproject.toml / pom.xml, existing README, source structure, git history (last 20 commits), any existing AGENTS.md or CLAUDE.md.\n\nMake AGENTS.md concise — it's a quick-start brief, not documentation.",
+      "agent": "init-project",
+      "subtask": true
+    }
+  }
+}
