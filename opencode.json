@@ -8,17 +8,15 @@
   "mcp": {
     "sequential-thinking": {
       "type": "local",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "env": {
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "environment": {
         "DISABLE_THOUGHT_LOGGING": "false"
       }
     },
     "memory": {
       "type": "local",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "env": {
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "environment": {
         "MEMORY_FILE_PATH": "{env:HOME}/.config/opencode/memory.jsonl"
       }
     }
@@ -314,83 +312,4 @@
       }
     }
   },
-
-  "command": {
-    "plan": {
-      "description": "Analyze requirements, surface risks, and produce a structured implementation plan with 3 architectural options. No code written until you confirm.",
-      "template": "Load the planner skill and produce a complete implementation plan for: $ARGUMENTS\n\nInclude: requirements restatement, affected files, step-by-step phases, dependencies, risks (HIGH/MEDIUM/LOW), and complexity estimate. Present 3 architectural options when there are meaningful trade-offs. Wait for my confirmation before any implementation begins.",
-      "agent": "planner",
-      "subtask": true
-    },
-
-    "tdd": {
-      "description": "Implement a feature or fix using strict TDD: write failing test first, minimal code to pass, then refactor. 80%+ coverage required.",
-      "template": "Apply strict TDD for: $ARGUMENTS\n\nFollow RED→GREEN→REFACTOR:\n1. Write the failing test first and run it to confirm it fails\n2. Write minimal code to make it pass\n3. Run tests again to confirm GREEN\n4. Refactor while keeping tests green\n5. Verify coverage >= 80%\n\nNever skip RED. Never write implementation before a failing test exists.",
-      "agent": "tdd-guide",
-      "subtask": true
-    },
-
-    "review": {
-      "description": "Review staged changes or a diff for bugs, security issues, architecture violations. Tiered: CRITICAL/HIGH/MEDIUM. No style comments.",
-      "template": "Review the following code changes for bugs, security vulnerabilities, logic errors, and architecture violations:\n\n!`git diff --staged 2>/dev/null || git diff HEAD~1 2>/dev/null`\n\nReport only real defects — no style comments. Every finding must include: file, approximate line, root cause, and concrete fix. End with verdict: APPROVED / APPROVED WITH NOTES / CHANGES REQUESTED / BLOCKED.",
-      "agent": "code-review",
-      "subtask": true
-    },
-
-    "fix": {
-      "description": "Diagnose and fix the current build/test failure. Runs failing command, classifies root cause, applies surgical fix, re-verifies.",
-      "template": "Diagnose and fix the current failure: $ARGUMENTS\n\nSteps:\n1. Run the failing command to capture the current error\n2. Classify failure type (compilation, dependency, test, runtime)\n3. Apply surgical fix — touch only what is broken\n4. Re-run to verify the fix worked\n5. If still failing after 3 different approaches, explain root cause and ask for direction",
-      "agent": "fix",
-      "subtask": true
-    },
-
-    "secure": {
-      "description": "Full security audit: OWASP Top 10, dependency CVEs, auth/authorization, input validation, secrets exposure.",
-      "template": "Perform a comprehensive security audit${ $ARGUMENTS ? ' focused on: ' + $ARGUMENTS : '' }.\n\nCheck for:\n- OWASP Top 10 vulnerabilities\n- Hardcoded secrets or API keys in source\n- SQL/command injection vectors\n- Authentication and authorization flaws\n- Unsafe input handling\n- Dependency CVEs (run audit tool if available)\n- PII exposure in logs\n\nMap every finding to OWASP category with severity (CRITICAL/HIGH/MEDIUM/LOW) and concrete fix.",
-      "agent": "security-auditor",
-      "subtask": true
-    },
-
-    "refactor": {
-      "description": "Restructure code while preserving behavior. Maps blast radius, proposes 3 options, applies incrementally with test verification.",
-      "template": "Refactor: $ARGUMENTS\n\nSteps:\n1. Map the blast radius — which files and callers are affected\n2. Propose 3 refactoring approaches with trade-offs (mark one RECOMMENDED)\n3. Wait for confirmation before applying\n4. Apply incrementally — verify tests pass after each step\n5. Report: what changed, what tests verify correctness, any remaining debt",
-      "agent": "refactor",
-      "subtask": true
-    },
-
-    "learn": {
-      "description": "Extract reusable patterns from current session into a skill file for future sessions.",
-      "template": "Extract reusable patterns from this session and propose a new skill or update to an existing one.\n\nLook for:\n- Recurring patterns in the code we wrote\n- Decisions made and their rationale\n- Mistakes corrected and what triggered them\n- Architecture choices with clear trade-offs\n\nFormat the output as a SKILL.md file ready to save to skills/<name>/SKILL.md",
-      "agent": "build",
-      "subtask": false
-    },
-
-    "checkpoint": {
-      "description": "Save current progress: run verification gates, summarize state, identify next steps.",
-      "template": "Run a checkpoint for the current work:\n\n1. Run available verification gates: !`npm test 2>/dev/null || go test ./... 2>/dev/null || pytest 2>/dev/null`\n2. Show git status: !`git status --short`\n3. Summarize: what was completed, what is in progress, what remains\n4. List any open issues or TODOs added in this session\n5. Suggest next steps\n\nThis is a progress snapshot — do not make changes.",
-      "agent": "build",
-      "subtask": false
-    },
-
-    "verify": {
-      "description": "Run the full verification pipeline: compile → unit tests → integration tests → coverage → security scan.",
-      "template": "Run the full verification pipeline and report gate-by-gate:\n\n1. Compile / type-check: !`npm run build 2>/dev/null || tsc --noEmit 2>/dev/null || go build ./... 2>/dev/null`\n2. Unit tests: !`npm test 2>/dev/null || go test -short ./... 2>/dev/null || pytest -x 2>/dev/null`\n3. Coverage check (if configured)\n4. Security audit: !`npm audit 2>/dev/null || pip-audit 2>/dev/null`\n\nNever advance past a red gate. Report: PASS/FAIL per gate with details on failures.",
-      "agent": "build",
-      "subtask": false
-    },
-
-    "orchestrate": {
-      "description": "Decompose a complex task into independent subtasks and coordinate multiple specialized agents in parallel.",
-      "template": "Orchestrate the following complex task using multiple specialized agents:\n\n$ARGUMENTS\n\nSteps:\n1. Analyze and decompose into independent subtasks\n2. Identify which agent is best for each subtask\n3. Identify dependencies — which tasks must run sequentially vs in parallel\n4. Execute: launch parallel subagents for independent work, sequential for dependent work\n5. Synthesize results and report what each agent produced",
-      "agent": "orchestrator",
-      "subtask": true
-    },
-
-    "init-project": {
-      "description": "Scan the project and generate AGENTS.md + .opencode/opencode.json with project-specific context. Run once per project.",
-      "template": "Initialize OpenCode context for this project.\n\nScan the codebase and generate:\n1. AGENTS.md — universal agent context (tech stack, architecture, absolute rules, known gotchas)\n2. .opencode/opencode.json — project-specific config with relevant instructions\n\nRead: package.json / pyproject.toml / pom.xml, existing README, source structure, git history (last 20 commits), any existing AGENTS.md or CLAUDE.md.\n\nMake AGENTS.md concise — it's a quick-start brief, not documentation.",
-      "agent": "init-project",
-      "subtask": true
-    }
-  }
 }
