@@ -36,6 +36,8 @@ PLUGINS=(
   "pre-commit-guard.ts"
   "session-notify.ts"
   "env-protection.ts"
+  "flutter-check.ts"
+  "java-check.ts"
 )
 
 AGENTS=(
@@ -45,7 +47,9 @@ AGENTS=(
   "doc-writer.md"
   "explore.md"
   "fix.md"
+  "flutter-reviewer.md"
   "init-project.md"
+  "java-reviewer.md"
   "new-feature.md"
   "orchestrator.md"
   "planner.md"
@@ -84,10 +88,12 @@ SKILLS=(
   "deployment-patterns"
   "docker-patterns"
   "e2e-testing"
+  "flutter-patterns"
   "git-workflow"
   "github-actions"
   "golang-patterns"
   "iterative-retrieval"
+  "java-patterns"
   "multiagent-orchestration"
   "node-patterns"
   "python-patterns"
@@ -289,7 +295,7 @@ echo "  Agents   : $TOTAL_AGENTS"
 echo "  Commands : $TOTAL_COMMANDS  (slash commands, e.g. /plan, /tdd, /review)"
 echo "  Skills   : $TOTAL_SKILLS"
 echo "  Rules    : $TOTAL_RULES  (modular instruction sets)"
-echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, pre-commit-guard, session-notify, env-protection)"
+  echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, pre-commit-guard, session-notify, env-protection, flutter-check, java-check)"
 echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
 
 if [ ${#PRESERVED[@]} -gt 0 ]; then

@@ -3,7 +3,10 @@
  *
  * Intercepts `tool.execute.before` on Bash calls that match `git commit`.
  * Checks:
- *   1. Staged files must not contain console.log / debugger statements
+ *   1. Staged files must not contain debug statements:
+ *      - JS/TS:   console.log / debugger
+ *      - Dart:    print( statements
+ *      - Java:    System.out.println / e.printStackTrace()
  *   2. Staged files must not contain obvious secret patterns (API keys, tokens)
  *   3. Commit message (when -m/--message is present) must follow Conventional Commits
  *
@@ -55,20 +58,27 @@ export const PreCommitGuardPlugin: Plugin = async ({ $ }) => {
 
       if (!diff.trim()) return // nothing staged
 
-      // ── 2. Check for console.log / debugger ─────────────────────────────────
+      // ── 2. Check for debug statements (JS/TS + Dart + Java) ────────────────
       const addedLines = diff
         .split("\n")
         .filter((l) => l.startsWith("+") && !l.startsWith("+++"))
         .map((l) => l.slice(1))
 
       const debugStatements = addedLines.filter((l) =>
-        /console\.(log|warn|error|debug|info)\s*\(/.test(l) || /\bdebugger\b/.test(l)
+        // JS / TS
+        /console\.(log|warn|error|debug|info)\s*\(/.test(l) ||
+        /\bdebugger\b/.test(l) ||
+        // Dart — bare print( and debugPrint( are ok in tests but not in prod code
+        /^\s*print\s*\(/.test(l) ||
+        // Java
+        /System\.out\.print(ln)?\s*\(/.test(l) ||
+        /\.printStackTrace\s*\(/.test(l)
       )
 
       if (debugStatements.length > 0) {
         const examples = debugStatements.slice(0, 3).map((l) => `  ${l.trim()}`).join("\n")
         throw new Error(
-          `[pre-commit-guard] BLOCKED: ${debugStatements.length} debug statement(s) in staged changes:\n${examples}\n\nRemove them before committing.`
+          `[pre-commit-guard] BLOCKED: ${debugStatements.length} debug statement(s) in staged changes:\n${examples}\n\nRemove them before committing.\n(JS/TS: console.log/debugger | Dart: print() | Java: System.out.println/printStackTrace)`
         )
       }
 
