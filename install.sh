@@ -31,6 +31,13 @@ ROOT_FILES=(
   "AGENTS.md"
 )
 
+PLUGINS=(
+  "typescript-check.ts"
+  "pre-commit-guard.ts"
+  "session-notify.ts"
+  "env-protection.ts"
+)
+
 AGENTS=(
   "architect.md"
   "build-resolver.md"
@@ -165,7 +172,7 @@ deploy_file() {
 }
 
 # ─── 1. Create target directory structure ─────────────────────────────────────
-mkdir -p "$TARGET_DIR/agents" "$TARGET_DIR/commands" "$TARGET_DIR/skills" "$TARGET_DIR/rules"
+mkdir -p "$TARGET_DIR/agents" "$TARGET_DIR/commands" "$TARGET_DIR/skills" "$TARGET_DIR/rules" "$TARGET_DIR/plugins"
 
 # ─── 2. Discover preserved skills ─────────────────────────────────────────────
 PRESERVED=()
@@ -196,7 +203,20 @@ if [ "$ROOT_UPDATED" -eq 0 ]; then
   info "root files  — all up to date"
 fi
 
-# ─── 4. Deploy agents ──────────────────────────────────────────────────────────
+# ─── 4. Deploy plugins ─────────────────────────────────────────────────────────
+PLUGINS_UPDATED=0
+for plugin in "${PLUGINS[@]}"; do
+  if deploy_file "plugins/$plugin" "$TARGET_DIR/plugins/$plugin"; then
+    success "plugins/$plugin"
+    ((PLUGINS_UPDATED++)) || true
+  fi
+done
+
+if [ "$PLUGINS_UPDATED" -eq 0 ]; then
+  info "plugins/    — all up to date"
+fi
+
+# ─── 5. Deploy agents ──────────────────────────────────────────────────────────
 AGENTS_UPDATED=0
 for agent in "${AGENTS[@]}"; do
   if deploy_file "agents/$agent" "$TARGET_DIR/agents/$agent"; then
@@ -209,7 +229,7 @@ if [ "$AGENTS_UPDATED" -eq 0 ]; then
   info "agents/     — all up to date"
 fi
 
-# ─── 5. Deploy commands ────────────────────────────────────────────────────────
+# ─── 6. Deploy commands ────────────────────────────────────────────────────────
 COMMANDS_UPDATED=0
 for cmd in "${COMMANDS[@]}"; do
   if deploy_file "commands/$cmd" "$TARGET_DIR/commands/$cmd"; then
@@ -222,7 +242,7 @@ if [ "$COMMANDS_UPDATED" -eq 0 ]; then
   info "commands/   — all up to date"
 fi
 
-# ─── 6. Deploy skills (skip preserved) ────────────────────────────────────────
+# ─── 7. Deploy skills (skip preserved) ────────────────────────────────────────
 SKILLS_UPDATED=0
 for skill in "${SKILLS[@]}"; do
   skip=false
@@ -241,7 +261,7 @@ if [ "$SKILLS_UPDATED" -eq 0 ]; then
   info "skills/     — all up to date"
 fi
 
-# ─── 7. Deploy rules ───────────────────────────────────────────────────────────
+# ─── 8. Deploy rules ───────────────────────────────────────────────────────────
 RULES_UPDATED=0
 for rule in "${RULES[@]}"; do
   if deploy_file "rules/$rule" "$TARGET_DIR/rules/$rule"; then
@@ -254,7 +274,7 @@ if [ "$RULES_UPDATED" -eq 0 ]; then
   info "rules/      — all up to date"
 fi
 
-# ─── 8. Summary ───────────────────────────────────────────────────────────────
+# ─── 9. Summary ───────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}Done.${NC}"
 echo ""
@@ -263,12 +283,14 @@ TOTAL_AGENTS=$(find "$TARGET_DIR/agents" -maxdepth 1 -name "*.md" 2>/dev/null | 
 TOTAL_COMMANDS=$(find "$TARGET_DIR/commands" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
 TOTAL_SKILLS=$(find "$TARGET_DIR/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 TOTAL_RULES=$(find "$TARGET_DIR/rules" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+TOTAL_PLUGINS=$(find "$TARGET_DIR/plugins" -maxdepth 1 -name "*.ts" -o -name "*.js" 2>/dev/null | wc -l | tr -d ' ')
 
 echo "  Agents   : $TOTAL_AGENTS"
 echo "  Commands : $TOTAL_COMMANDS  (slash commands, e.g. /plan, /tdd, /review)"
 echo "  Skills   : $TOTAL_SKILLS"
 echo "  Rules    : $TOTAL_RULES  (modular instruction sets)"
-echo "  MCPs     : sequential-thinking, memory  (configured in opencode.json)"
+echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, pre-commit-guard, session-notify, env-protection)"
+echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
 
 if [ ${#PRESERVED[@]} -gt 0 ]; then
   echo ""
