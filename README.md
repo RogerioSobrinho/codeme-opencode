@@ -105,19 +105,34 @@ All agents use the `github-copilot` provider, which routes through your Copilot 
 
 ## Rules
 
-Modular rule sets loaded by agents:
+Modular rule sets. The 5 universal rules (`core`, `engineering`, `security`, `testing`, `git`) are injected into every session via `instructions` in `opencode.json`. Language-specific rules (`typescript`, `python`) are available for project-level inclusion.
 
-| File | Scope |
-|---|---|
-| `rules/core.md` | Universal: behavior, quality, error handling, verification |
-| `rules/engineering.md` | Architecture, concurrency, API design, observability |
-| `rules/security.md` | OWASP, auth, secrets, injection, HTTP headers |
-| `rules/testing.md` | Test pyramid, coverage, naming, mocking, isolation |
-| `rules/typescript.md` | Type safety, strict mode, async, React |
-| `rules/python.md` | Type hints, async, mypy, FastAPI, security |
-| `rules/git.md` | Conventional commits, branching, PR hygiene |
+| File | Scope | Auto-loaded |
+|---|---|---|
+| `rules/core.md` | Universal: behavior, quality, error handling, verification | Yes |
+| `rules/engineering.md` | Architecture, concurrency, API design, observability | Yes |
+| `rules/security.md` | OWASP, auth, secrets, injection, HTTP headers | Yes |
+| `rules/testing.md` | Test pyramid, coverage, naming, mocking, isolation | Yes |
+| `rules/git.md` | Conventional commits, branching, PR hygiene | Yes |
+| `rules/typescript.md` | Type safety, strict mode, async, React | Project-level |
+| `rules/python.md` | Type hints, async, mypy, FastAPI, security | Project-level |
 
-## Plugins
+## Global Config
+
+Key settings in `opencode.json` beyond agents:
+
+| Field | Value | Purpose |
+|---|---|---|
+| `enabled_providers` | `["github-copilot"]` | Locks all model selection to Copilot Pro+; prevents accidental use of other authenticated providers |
+| `instructions` | 5 rules files | Injects universal rules into every session automatically |
+| `compaction` | `auto: true, prune: true, reserved: 10000` | Prevents context overflow on long sessions |
+| `watcher.ignore` | `node_modules, dist, .git, build, target, .dart_tool` | Excludes generated/vendor directories from the file watcher |
+
+Temperature is set per agent: `0.1` for analysis/review/deterministic tasks, `0.3` for generative/planning tasks.
+
+`build-resolver`, `fix` have `steps: 10` to enforce a hard stop after 10 tool calls. `write-commit`, `build-resolver`, and `explore` are `hidden: true` so they do not clutter the `@` autocomplete — they are invoked by commands and other agents.
+
+
 
 Quality-guard plugins that run automatically during OpenCode sessions:
 
