@@ -38,6 +38,16 @@ PLUGINS=(
   "env-protection.ts"
   "flutter-check.ts"
   "java-check.ts"
+  "shell-env.ts"
+  "compaction.ts"
+  "todo-progress.ts"
+)
+
+TOOLS=(
+  "run-tests.ts"
+  "git-summary.ts"
+  "changed-files.ts"
+  "security-audit.ts"
 )
 
 AGENTS=(
@@ -178,7 +188,7 @@ deploy_file() {
 }
 
 # ─── 1. Create target directory structure ─────────────────────────────────────
-mkdir -p "$TARGET_DIR/agents" "$TARGET_DIR/commands" "$TARGET_DIR/skills" "$TARGET_DIR/rules" "$TARGET_DIR/plugins"
+mkdir -p "$TARGET_DIR/agents" "$TARGET_DIR/commands" "$TARGET_DIR/skills" "$TARGET_DIR/rules" "$TARGET_DIR/plugins" "$TARGET_DIR/tools"
 
 # ─── 2. Discover preserved skills ─────────────────────────────────────────────
 PRESERVED=()
@@ -222,7 +232,20 @@ if [ "$PLUGINS_UPDATED" -eq 0 ]; then
   info "plugins/    — all up to date"
 fi
 
-# ─── 5. Deploy agents ──────────────────────────────────────────────────────────
+# ─── 5. Deploy tools ───────────────────────────────────────────────────────────
+TOOLS_UPDATED=0
+for tool_file in "${TOOLS[@]}"; do
+  if deploy_file "tools/$tool_file" "$TARGET_DIR/tools/$tool_file"; then
+    success "tools/$tool_file"
+    ((TOOLS_UPDATED++)) || true
+  fi
+done
+
+if [ "$TOOLS_UPDATED" -eq 0 ]; then
+  info "tools/      — all up to date"
+fi
+
+# ─── 6. Deploy agents ──────────────────────────────────────────────────────────
 AGENTS_UPDATED=0
 for agent in "${AGENTS[@]}"; do
   if deploy_file "agents/$agent" "$TARGET_DIR/agents/$agent"; then
@@ -235,7 +258,7 @@ if [ "$AGENTS_UPDATED" -eq 0 ]; then
   info "agents/     — all up to date"
 fi
 
-# ─── 6. Deploy commands ────────────────────────────────────────────────────────
+# ─── 7. Deploy commands ────────────────────────────────────────────────────────
 COMMANDS_UPDATED=0
 for cmd in "${COMMANDS[@]}"; do
   if deploy_file "commands/$cmd" "$TARGET_DIR/commands/$cmd"; then
@@ -248,7 +271,7 @@ if [ "$COMMANDS_UPDATED" -eq 0 ]; then
   info "commands/   — all up to date"
 fi
 
-# ─── 7. Deploy skills (skip preserved) ────────────────────────────────────────
+# ─── 8. Deploy skills (skip preserved) ────────────────────────────────────────
 SKILLS_UPDATED=0
 for skill in "${SKILLS[@]}"; do
   skip=false
@@ -267,7 +290,7 @@ if [ "$SKILLS_UPDATED" -eq 0 ]; then
   info "skills/     — all up to date"
 fi
 
-# ─── 8. Deploy rules ───────────────────────────────────────────────────────────
+# ─── 9. Deploy rules ───────────────────────────────────────────────────────────
 RULES_UPDATED=0
 for rule in "${RULES[@]}"; do
   if deploy_file "rules/$rule" "$TARGET_DIR/rules/$rule"; then
@@ -280,7 +303,7 @@ if [ "$RULES_UPDATED" -eq 0 ]; then
   info "rules/      — all up to date"
 fi
 
-# ─── 9. Summary ───────────────────────────────────────────────────────────────
+# ─── 10. Summary ──────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}Done.${NC}"
 echo ""
@@ -289,13 +312,15 @@ TOTAL_AGENTS=$(find "$TARGET_DIR/agents" -maxdepth 1 -name "*.md" 2>/dev/null | 
 TOTAL_COMMANDS=$(find "$TARGET_DIR/commands" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
 TOTAL_SKILLS=$(find "$TARGET_DIR/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 TOTAL_RULES=$(find "$TARGET_DIR/rules" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
-TOTAL_PLUGINS=$(find "$TARGET_DIR/plugins" -maxdepth 1 -name "*.ts" -o -name "*.js" 2>/dev/null | wc -l | tr -d ' ')
+TOTAL_PLUGINS=$(find "$TARGET_DIR/plugins" -maxdepth 1 \( -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l | tr -d ' ')
+TOTAL_TOOLS=$(find "$TARGET_DIR/tools" -maxdepth 1 \( -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l | tr -d ' ')
 
 echo "  Agents   : $TOTAL_AGENTS"
 echo "  Commands : $TOTAL_COMMANDS  (slash commands, e.g. /plan, /tdd, /review)"
 echo "  Skills   : $TOTAL_SKILLS"
 echo "  Rules    : $TOTAL_RULES  (modular instruction sets)"
-  echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, pre-commit-guard, session-notify, env-protection, flutter-check, java-check)"
+echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, pre-commit-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress)"
+echo "  Tools    : $TOTAL_TOOLS  (run-tests, git-summary, changed-files, security-audit)"
 echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
 
 if [ ${#PRESERVED[@]} -gt 0 ]; then
