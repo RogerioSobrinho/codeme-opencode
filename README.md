@@ -1,6 +1,8 @@
 # codme-opencode
 
-Global configuration installer for [OpenCode](https://opencode.ai) — ships 17 specialized agents, 11 slash commands, 28 skills, and 7 rule sets, deployed to `~/.config/opencode/`.
+Global configuration installer for [OpenCode](https://opencode.ai) — ships 19 specialized agents, 11 slash commands, 29 skills, 6 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
+
+Requires a **GitHub Copilot Pro+** subscription. All agents use the `github-copilot` provider.
 
 ## Install
 
@@ -26,34 +28,60 @@ Deploys to `~/.config/opencode/`:
 |---|---|
 | `opencode.json` | Global config: model, MCPs, agent definitions, permissions |
 | `AGENTS.md` | Universal agent context template |
-| `agents/` | 17 specialized agents |
+| `agents/` | 19 specialized agents |
 | `commands/` | 11 slash commands |
-| `skills/` | 28 skill packs |
+| `skills/` | 29 skill packs |
 | `rules/` | 7 modular rule sets |
+| `plugins/` | 6 quality-guard plugins |
 
 Company-specific skills (`company-*`) are never overwritten.
 
 ## Agents
 
-| Agent | Purpose |
-|---|---|
-| `planner` | Requirements analysis, 3 architecture options, implementation plan. Writes no code. |
-| `architect` | System design, ADR generation, trade-off analysis |
-| `new-feature` | Full feature lifecycle: explore → design → TDD → review |
-| `code-review` | Bug, security, architecture review. Tiered CRITICAL/HIGH/MEDIUM. |
-| `security-auditor` | OWASP Top 10, CVE scan, auth/authz, secrets exposure |
-| `tdd-guide` | Strict RED→GREEN→REFACTOR. TS, Python, Java, Go. |
-| `build-resolver` | Build failures across npm, pip, Maven, Gradle, Go |
-| `refactor` | Blast radius mapping, 3 options, incremental with test verification |
-| `doc-writer` | README, JSDoc/TSDoc, OpenAPI, ADR, codemap |
-| `explore` | Read-only codebase explorer |
-| `fix` | Diagnose and fix build/test/runtime failures. Max 3 attempts. |
-| `pr-review` | PR review from git diff. Async/CI-friendly. |
-| `orchestrator` | Multi-agent coordinator. Parallel + sequential subagent dispatch. |
-| `typescript-reviewer` | TypeScript/React specialist: `any` leaks, unsound assertions, hook violations |
-| `python-reviewer` | Python/FastAPI specialist: blocking I/O, missing types, injection vectors |
-| `init-project` | Generates `AGENTS.md` + `.opencode/opencode.json` for any project |
-| `write-commit` | Conventional commit message from `git diff --staged`. Haiku model. |
+| Agent | Model | Purpose |
+|---|---|---|
+| `planner` | claude-opus-4.6 | Requirements analysis, 3 architecture options, implementation plan. Writes no code. |
+| `architect` | claude-opus-4.6 | System design, ADR generation, trade-off analysis |
+| `security-auditor` | claude-opus-4.6 | OWASP Top 10, CVE scan, auth/authz, secrets exposure |
+| `orchestrator` | claude-opus-4.6 | Multi-agent coordinator. Parallel + sequential subagent dispatch. |
+| `new-feature` | gpt-5.3-codex | Full feature lifecycle: explore → design → TDD → review |
+| `refactor` | gpt-5.3-codex | Blast radius mapping, 3 options, incremental with test verification |
+| `typescript-reviewer` | gpt-5.3-codex | TypeScript/React specialist: `any` leaks, unsound assertions, hook violations |
+| `python-reviewer` | gpt-5.3-codex | Python/FastAPI specialist: blocking I/O, missing types, injection vectors |
+| `flutter-reviewer` | gpt-5.3-codex | Flutter/Dart+Riverpod specialist: BuildContext leaks, const, mounted guard |
+| `java-reviewer` | gpt-5.3-codex | Java 21/Spring Boot 3.x specialist: @Transactional, N+1, entity exposure |
+| `code-review` | claude-sonnet-4.6 | Bug, security, architecture review. Tiered CRITICAL/HIGH/MEDIUM. |
+| `tdd-guide` | claude-sonnet-4.6 | Strict RED→GREEN→REFACTOR. TS, Python, Java, Go. |
+| `pr-review` | claude-sonnet-4.6 | PR review from git diff. Async/CI-friendly. |
+| `init-project` | gemini-2.5-pro | Generates `AGENTS.md` + `.opencode/opencode.json` for any project |
+| `build-resolver` | grok-code-fast-1 | Build failures across npm, pip, Maven, Gradle, Go |
+| `fix` | grok-code-fast-1 | Diagnose and fix build/test/runtime failures. Max 3 attempts. |
+| `explore` | gpt-5.4-mini | Read-only codebase explorer |
+| `doc-writer` | gpt-5.4-mini | README, JSDoc/TSDoc, OpenAPI, ADR, codemap |
+| `write-commit` | gpt-5-mini | Conventional commit message from `git diff --staged`. |
+
+## Model Strategy
+
+All agents use the `github-copilot` provider, which routes through your Copilot Pro+ subscription. Models are assigned by task profile — no heavier model is used where a lighter one is sufficient.
+
+| Tier | Model | Agents |
+|---|---|---|
+| **Opus** | `claude-opus-4.6` | planner, architect, security-auditor, orchestrator |
+| **Sonnet** | `claude-sonnet-4.6` | code-review, tdd-guide, pr-review _(global default)_ |
+| **Codex** | `gpt-5.3-codex` | new-feature, refactor, typescript-reviewer, python-reviewer, flutter-reviewer, java-reviewer |
+| **Gemini** | `gemini-2.5-pro` | init-project |
+| **Grok** | `grok-code-fast-1` | build-resolver, fix |
+| **Mini** | `gpt-5.4-mini` | explore, doc-writer _(global small\_model)_ |
+| **Mini** | `gpt-5-mini` | write-commit |
+
+**Rationale by tier:**
+
+- **Opus** — used only where deep reasoning, multi-step risk analysis, or security pattern recognition matters. The cost is justified by the criticality of the output (wrong architecture or missed vulnerability is expensive).
+- **Codex** — code-generation and code-review tasks map directly to what codex models are trained for. 400K context window handles large file reviews comfortably.
+- **Sonnet** — balanced default for qualitative tasks (review narrative, TDD guidance, PR feedback) where raw code generation speed is less important than reasoning quality.
+- **Gemini 2.5 Pro** — `init-project` scans entire codebases before writing anything. Gemini's architecture handles broad multi-file reads well.
+- **Grok** — `build-resolver` and `fix` are pattern-match-then-apply tasks (classify error → apply targeted fix). Grok Code Fast is purpose-built for this and avoids burning Opus/Sonnet tokens on mechanical work.
+- **Mini** — `explore` is read-only, `doc-writer` is mechanical writing, `write-commit` generates a single line. No reasoning depth needed; cost savings are maximized here.
 
 ## Slash Commands
 
@@ -73,7 +101,7 @@ Company-specific skills (`company-*`) are never overwritten.
 
 ## Skills
 
-28 skill packs covering: TDD workflow, verification loops, autonomous loops, multi-agent orchestration, strategic compact, context budget, API design, security review, debugging playbook, codebase onboarding, TypeScript/React/Node/Python/Spring Boot/Go/database/git/GitHub Actions/Docker/deployment/E2E testing patterns, architecture decision records, and more.
+29 skill packs covering: TDD workflow, verification loops, autonomous loops, multi-agent orchestration, strategic compact, context budget, API design, security review, debugging playbook, codebase onboarding, TypeScript/React/Node/Python/Spring Boot/Go/Flutter/Java/database/git/GitHub Actions/Docker/deployment/E2E testing patterns, architecture decision records, and more.
 
 ## Rules
 
@@ -89,12 +117,29 @@ Modular rule sets loaded by agents:
 | `rules/python.md` | Type hints, async, mypy, FastAPI, security |
 | `rules/git.md` | Conventional commits, branching, PR hygiene |
 
+## Plugins
+
+Quality-guard plugins that run automatically during OpenCode sessions:
+
+| Plugin | Trigger |
+|---|---|
+| `typescript-check.ts` | Runs `tsc --noEmit` after TypeScript file edits |
+| `pre-commit-guard.ts` | Blocks commits with debug artifacts (`console.log`, `debugger`, `print()`, `System.out.println`) |
+| `session-notify.ts` | Desktop notification when a long-running session completes |
+| `env-protection.ts` | Prevents `.env` files from being written or overwritten |
+| `flutter-check.ts` | Runs `flutter analyze` after Dart file edits |
+| `java-check.ts` | Runs `mvn compile` or `gradle compileJava` after Java file edits |
+
 ## MCPs
 
 Configured in `opencode.json`:
 
-- **sequential-thinking** — structured multi-step reasoning
-- **memory** — persistent memory across sessions (`~/.config/opencode/memory.jsonl`)
+| MCP | Type | Purpose |
+|---|---|---|
+| `sequential-thinking` | local | Structured multi-step reasoning |
+| `memory` | local | Persistent memory across sessions (`~/.config/opencode/memory.jsonl`) |
+| `context7` | remote | Up-to-date library documentation lookup |
+| `gh_grep` | remote | GitHub code search across public repositories |
 
 ## Per-Project Config
 
