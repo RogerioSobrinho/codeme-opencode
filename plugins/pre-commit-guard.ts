@@ -50,7 +50,7 @@ export const PreCommitGuardPlugin: Plugin = async ({ $, client }) => {
       let diff = ""
       try {
         const result = await $`git diff --cached --unified=0`.quiet()
-        diff = result.stdout
+        diff = String(result.stdout ?? "")
       } catch {
         // Not in a git repo or nothing staged — let it pass
         return
