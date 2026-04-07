@@ -155,7 +155,6 @@ RULES=(
 # at startup using Bun. The installer pre-installs them so the first launch
 # is instant and works offline.
 NPM_PLUGINS=(
-  "@tarquinen/opencode-dcp@latest"
   "@nick-vi/opencode-type-inject@latest"
 )
 
@@ -439,7 +438,7 @@ for pkg in "${NPM_PLUGINS[@]}"; do
   [ -d "$TARGET_DIR/node_modules/$pkg_name" ] && ((TOTAL_NPM++)) || true
 done
 if [ "$TOTAL_NPM" -gt 0 ]; then
-  echo "  npm      : $TOTAL_NPM plugin(s) installed — @tarquinen/opencode-dcp, @nick-vi/opencode-type-inject"
+  echo "  npm      : $TOTAL_NPM plugin(s) installed — @nick-vi/opencode-type-inject"
 fi
 
 if [ ${#PRESERVED[@]} -gt 0 ]; then
@@ -460,7 +459,4 @@ echo ""
   echo -e "  ${BLUE}Tip:${NC} Available slash commands: /plan  /tdd  /review  /fix  /secure"
   echo "       /refactor  /learn  /checkpoint  /verify  /orchestrate  /standup  /init-project"
   echo ""
-  echo -e "  ${BLUE}Tip:${NC} npm plugin commands after first launch:"
-  echo "       /dcp context  — token usage breakdown"
-  echo "       /dcp stats    — cumulative pruning stats"
 echo ""

@@ -78,7 +78,6 @@
   },
 
   "plugin": [
-    "@tarquinen/opencode-dcp@latest",
     "@nick-vi/opencode-type-inject@latest"
   ],
 
