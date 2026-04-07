@@ -4,12 +4,20 @@ import path from "path"
 /**
  * smart-context — auto-injects file contents when the agent references a path
  *
- * Watches `message.updated` for assistant messages that mention file paths
- * (e.g. "look at src/utils/auth.ts" or "the issue is in lib/parser.go").
- * When a referenced file exists on disk and hasn't been injected yet in this
- * session, its content is appended to the prompt silently (noReply: true) so
- * the agent has the full context without requiring a manual "read this file"
- * round-trip.
+ * Watches two event sources for files to auto-inject:
+ *
+ *   1. `file.edited` — fires when the agent itself edits a file; injects its
+ *      companion files (e.g. editing foo.ts → auto-inject foo.test.ts if it
+ *      exists and is small enough).
+ *
+ *   2. `message.updated` — watches assistant messages for file path mentions
+ *      (e.g. "look at src/utils/auth.ts" or "the issue is in lib/parser.go").
+ *      When a referenced file exists on disk and hasn't been injected yet in
+ *      this session, its content is appended to the prompt silently.
+ *
+ * This is strictly additive — `file.edited` adds zero round-trips; it fires
+ * immediately when a write completes. `message.updated` is the fallback for
+ * files the agent mentions but hasn't read yet.
  *
  * Behaviour:
  *   - Only injects files that exist on disk
@@ -133,12 +141,52 @@ export const SmartContextPlugin: Plugin = async ({ client, worktree }) => {
     }
   }
 
+  // Companion file patterns for file.edited: editing foo.ts → also try foo.test.ts
+  function companionPaths(editedPath: string): string[] {
+    const dir = path.dirname(editedPath)
+    const ext = path.extname(editedPath)
+    const base = path.basename(editedPath, ext)
+    const companions: string[] = []
+
+    // Test companions
+    companions.push(path.join(dir, `${base}.test${ext}`))
+    companions.push(path.join(dir, `${base}.spec${ext}`))
+    companions.push(path.join(dir, `__tests__`, `${base}.test${ext}`))
+    companions.push(path.join(dir, `__tests__`, `${base}.spec${ext}`))
+
+    // Type definition companion (.ts → .d.ts)
+    if (ext === ".ts" || ext === ".tsx") {
+      companions.push(path.join(dir, `${base}.d.ts`))
+    }
+
+    return companions
+  }
+
   return {
     event: async ({ event }: { event: any }) => {
-      if (event.type !== "message.updated") return
-
       const sessionId: string =
         event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
+
+      if (event.type === "session.deleted") {
+        injectedBySession.delete(sessionId)
+        return
+      }
+
+      // file.edited: inject companion files (test, spec, d.ts) silently
+      if (event.type === "file.edited") {
+        const editedPath: string =
+          event.properties?.path ??
+          event.properties?.filePath ??
+          event.properties?.file ??
+          ""
+        if (!editedPath) return
+
+        const companions = companionPaths(editedPath)
+        await Promise.allSettled(companions.map((p) => tryInject(sessionId, p)))
+        return
+      }
+
+      if (event.type !== "message.updated") return
 
       // Only process assistant messages
       const role = event.properties?.role ?? event.properties?.message?.role
@@ -158,12 +206,6 @@ export const SmartContextPlugin: Plugin = async ({ client, worktree }) => {
 
       // Inject each referenced file concurrently (best-effort)
       await Promise.allSettled(paths.map((p) => tryInject(sessionId, p)))
-    },
-
-    "session.deleted": async ({ event }: { event: any }) => {
-      const sessionId: string =
-        event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
-      injectedBySession.delete(sessionId)
     },
   }
 }

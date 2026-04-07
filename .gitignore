@@ -1,0 +1,10 @@
+# OpenCode runtime data (sessions, backups, logs, history)
+.opencode/
+
+# npm packages pre-installed by install.sh (not committed — install.sh handles this)
+node_modules/
+package-lock.json
+bun.lock
+
+# macOS
+.DS_Store

@@ -32,18 +32,18 @@ export const SessionNotifyPlugin: Plugin = async ({ $ }) => {
   if (process.platform !== "darwin") return {}
 
   return {
-    "permission.asked": async ({ event }: { event: any }) => {
-      if (process.env.OPENCODE_NO_NOTIFY === "1") return
-
-      const tool: string = event.properties?.tool ?? event.properties?.toolName ?? "a tool"
-      await notify($, `Waiting for your approval: ${tool}`, "Glass")
-    },
-
     event: async ({ event }: { event: any }) => {
-      if (event.type !== "session.idle") return
       if (process.env.OPENCODE_NO_NOTIFY === "1") return
 
-      await notify($, "Agent is done — ready for your next prompt.", "Submarine")
+      if (event.type === "permission.asked") {
+        const tool: string = event.properties?.tool ?? event.properties?.toolName ?? "a tool"
+        await notify($, `Waiting for your approval: ${tool}`, "Glass")
+        return
+      }
+
+      if (event.type === "session.idle") {
+        await notify($, "Agent is done — ready for your next prompt.", "Submarine")
+      }
     },
   }
 }

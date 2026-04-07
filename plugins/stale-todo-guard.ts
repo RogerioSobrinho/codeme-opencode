@@ -9,6 +9,8 @@ import type { Plugin } from "@opencode-ai/plugin"
  *   - Logs a structured warning via client.app.log
  *   - On macOS, sends a desktop notification so you notice even from another window
  *
+ * On `session.deleted`, cleans up the in-memory todo map.
+ *
  * This prevents the silent "agent thought it was done but left work unfinished"
  * failure mode that's easy to miss in long autonomous sessions.
  *
@@ -40,10 +42,15 @@ export const StaleTodoGuardPlugin: Plugin = async ({ $, client }) => {
     },
 
     event: async ({ event }: { event: any }) => {
-      if (event.type !== "session.idle") return
-
       const sessionId: string =
         event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
+
+      if (event.type === "session.deleted") {
+        todosBySession.delete(sessionId)
+        return
+      }
+
+      if (event.type !== "session.idle") return
 
       const todos = todosBySession.get(sessionId) ?? []
       if (todos.length === 0) return
@@ -90,12 +97,6 @@ export const StaleTodoGuardPlugin: Plugin = async ({ $, client }) => {
           // Non-fatal
         }
       }
-    },
-
-    "session.deleted": async ({ event }: { event: any }) => {
-      const sessionId: string =
-        event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
-      todosBySession.delete(sessionId)
     },
   }
 }

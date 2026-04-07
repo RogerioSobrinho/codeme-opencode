@@ -52,6 +52,15 @@ PLUGINS=(
   "error-rerun.ts"
   "smart-context.ts"
   "daily-digest.ts"
+  "session-error-notify.ts"
+  "tui-toast.ts"
+  "lsp-diagnostics.ts"
+  "permission-auto-approve.ts"
+  "command-history.ts"
+  "doom-loop-notify.ts"
+  "file-watcher.ts"
+  "session-diff.ts"
+  "tui-prompt-shortcuts.ts"
 )
 
 TOOLS=(
@@ -59,6 +68,7 @@ TOOLS=(
   "git-summary.ts"
   "changed-files.ts"
   "security-audit.ts"
+  "http-request.ts"
 )
 
 AGENTS=(
@@ -93,6 +103,7 @@ COMMANDS=(
   "refactor.md"
   "review.md"
   "secure.md"
+  "standup.md"
   "tdd.md"
   "verify.md"
 )
@@ -137,6 +148,15 @@ RULES=(
   "security.md"
   "testing.md"
   "typescript.md"
+)
+
+# npm packages to install into ~/.config/opencode/ so OpenCode picks them up.
+# OpenCode reads the "plugin" array from opencode.json and auto-installs these
+# at startup using Bun. The installer pre-installs them so the first launch
+# is instant and works offline.
+NPM_PLUGINS=(
+  "@tarquinen/opencode-dcp@latest"
+  "@nick-vi/opencode-type-inject@latest"
 )
 
 # ─── Detect mode ───────────────────────────────────────────────────────────────
@@ -313,7 +333,82 @@ if [ "$RULES_UPDATED" -eq 0 ]; then
   info "rules/      — all up to date"
 fi
 
-# ─── 10. Summary ──────────────────────────────────────────────────────────────
+# ─── 10. Install npm plugins ───────────────────────────────────────────────────
+# Pre-installs npm plugins into ~/.config/opencode/ so they are available on
+# the first OpenCode launch without requiring network access.
+#
+# Strategy:
+#   - Prefer bun (faster, used by OpenCode natively)
+#   - Fall back to npm if bun is not available
+#   - Create package.json if missing (required for bun/npm to install)
+#   - Idempotent: skips packages already installed at the right version
+#   - Soft failure: warns but does not abort the install if npm/bun fails
+
+if [ ${#NPM_PLUGINS[@]} -gt 0 ]; then
+  echo ""
+
+  # Detect package manager
+  NPM_CMD=""
+  if command -v bun &>/dev/null; then
+    NPM_CMD="bun"
+  elif command -v npm &>/dev/null; then
+    NPM_CMD="npm"
+  fi
+
+  if [ -z "$NPM_CMD" ]; then
+    warn "npm plugins — skipped (bun and npm not found; OpenCode will install on first launch)"
+  else
+    # Ensure package.json exists in target dir
+    PKG_JSON="$TARGET_DIR/package.json"
+    if [ ! -f "$PKG_JSON" ]; then
+      echo '{"name":"opencode-global-config","private":true,"dependencies":{}}' > "$PKG_JSON"
+      success "package.json created in $TARGET_DIR"
+    fi
+
+    NPM_UPDATED=0
+    NPM_SKIPPED=0
+    for pkg in "${NPM_PLUGINS[@]}"; do
+      # Strip version suffix for installed-check (e.g. @foo/bar@latest → @foo/bar)
+      pkg_name="${pkg%@*}"
+      # Handle scoped packages: @scope/name@version → name is @scope/name
+      if [[ "$pkg" == @* ]]; then
+        # e.g. @tarquinen/opencode-dcp@latest
+        pkg_name="$(echo "$pkg" | sed 's/@[^@/][^/]*$//')"
+        # If the result still ends with @, it's just @scope/name with no version
+        [[ "$pkg_name" == "$pkg" ]] && pkg_name="$pkg"
+      fi
+
+      # Check if already installed
+      if [ -d "$TARGET_DIR/node_modules/$pkg_name" ]; then
+        warn "npm/$pkg_name  — already installed"
+        ((NPM_SKIPPED++)) || true
+        continue
+      fi
+
+      if [ "$NPM_CMD" = "bun" ]; then
+        if bun add "$pkg" --cwd "$TARGET_DIR" --silent 2>/dev/null; then
+          success "npm/$pkg_name  (via bun)"
+          ((NPM_UPDATED++)) || true
+        else
+          warn "npm/$pkg_name  — bun install failed; OpenCode will retry on first launch"
+        fi
+      else
+        if npm install "$pkg" --prefix "$TARGET_DIR" --silent 2>/dev/null; then
+          success "npm/$pkg_name  (via npm)"
+          ((NPM_UPDATED++)) || true
+        else
+          warn "npm/$pkg_name  — npm install failed; OpenCode will retry on first launch"
+        fi
+      fi
+    done
+
+    if [ "$NPM_UPDATED" -eq 0 ] && [ "$NPM_SKIPPED" -gt 0 ]; then
+      info "npm plugins — all up to date"
+    fi
+  fi
+fi
+
+# ─── 11. Summary ──────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}Done.${NC}"
 echo ""
@@ -329,9 +424,23 @@ echo "  Agents   : $TOTAL_AGENTS"
 echo "  Commands : $TOTAL_COMMANDS  (slash commands, e.g. /plan, /tdd, /review)"
 echo "  Skills   : $TOTAL_SKILLS"
 echo "  Rules    : $TOTAL_RULES  (modular instruction sets)"
-echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, lint-check, pre-commit-guard, bash-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress, session-timer, diff-summary, file-backup, auto-branch, session-summary, stale-todo-guard, error-rerun, smart-context, daily-digest)"
-echo "  Tools    : $TOTAL_TOOLS  (run-tests, git-summary, changed-files, security-audit)"
-echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
+  echo "  Plugins  : $TOTAL_PLUGINS  (doom-loop-notify, file-watcher, session-diff, tui-prompt-shortcuts, session-error-notify, tui-toast, lsp-diagnostics, permission-auto-approve, command-history, typescript-check, lint-check, pre-commit-guard, bash-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress, session-timer, diff-summary, file-backup, auto-branch, session-summary, stale-todo-guard, error-rerun, smart-context, daily-digest)"
+  echo "  Tools    : $TOTAL_TOOLS  (run-tests, git-summary, changed-files, security-audit, http-request)"
+  echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
+
+# Count installed npm plugins
+TOTAL_NPM=0
+for pkg in "${NPM_PLUGINS[@]}"; do
+  pkg_name="${pkg%@*}"
+  if [[ "$pkg" == @* ]]; then
+    pkg_name="$(echo "$pkg" | sed 's/@[^@/][^/]*$//')"
+    [[ "$pkg_name" == "$pkg" ]] && pkg_name="$pkg"
+  fi
+  [ -d "$TARGET_DIR/node_modules/$pkg_name" ] && ((TOTAL_NPM++)) || true
+done
+if [ "$TOTAL_NPM" -gt 0 ]; then
+  echo "  npm      : $TOTAL_NPM plugin(s) installed — @tarquinen/opencode-dcp, @nick-vi/opencode-type-inject"
+fi
 
 if [ ${#PRESERVED[@]} -gt 0 ]; then
   echo ""
@@ -348,6 +457,10 @@ echo -e "  ${BLUE}Tip:${NC} Company-specific skills go in:"
 echo "       ~/.config/opencode/skills/company-{name}-{topic}/SKILL.md"
 echo "       (never overwritten by this installer)"
 echo ""
-echo -e "  ${BLUE}Tip:${NC} Available slash commands: /plan  /tdd  /review  /fix  /secure"
-echo "       /refactor  /learn  /checkpoint  /verify  /orchestrate  /init-project"
+  echo -e "  ${BLUE}Tip:${NC} Available slash commands: /plan  /tdd  /review  /fix  /secure"
+  echo "       /refactor  /learn  /checkpoint  /verify  /orchestrate  /standup  /init-project"
+  echo ""
+  echo -e "  ${BLUE}Tip:${NC} npm plugin commands after first launch:"
+  echo "       /dcp context  — token usage breakdown"
+  echo "       /dcp stats    — cumulative pruning stats"
 echo ""

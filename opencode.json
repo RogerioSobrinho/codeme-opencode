@@ -69,12 +69,18 @@
     "bash": "ask",
     "edit": "allow",
     "webfetch": "allow",
+    "http-request": "ask",
     "sequential-thinking_*": "deny",
     "memory_*": "deny",
     "context7_*": "deny",
     "gh_grep_*": "deny",
     "doom_loop": "deny"
   },
+
+  "plugin": [
+    "@tarquinen/opencode-dcp@latest",
+    "@nick-vi/opencode-type-inject@latest"
+  ],
 
   "default_agent": "build",
 
