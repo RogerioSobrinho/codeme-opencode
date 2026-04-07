@@ -1,6 +1,6 @@
 # codme-opencode
 
-Global configuration installer for [OpenCode](https://opencode.ai) — ships 19 specialized agents, 11 slash commands, 29 skills, 11 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
+Global configuration installer for [OpenCode](https://opencode.ai) — ships 19 specialized agents, 11 slash commands, 29 skills, 20 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
 
 Requires a **GitHub Copilot Pro+** subscription. All agents use the `github-copilot` provider.
 
@@ -32,7 +32,7 @@ Deploys to `~/.config/opencode/`:
 | `commands/` | 11 slash commands |
 | `skills/` | 29 skill packs |
 | `rules/` | 7 modular rule sets |
-| `plugins/` | 11 quality-guard plugins |
+| `plugins/` | 20 quality-guard and automation plugins |
 
 Company-specific skills (`company-*`) are never overwritten.
 
@@ -132,23 +132,34 @@ Temperature is set per agent: `0.1` for analysis/review/deterministic tasks, `0.
 
 `build-resolver`, `fix` have `steps: 10` to enforce a hard stop after 10 tool calls. `write-commit`, `build-resolver`, and `explore` are `hidden: true` so they do not clutter the `@` autocomplete — they are invoked by commands and other agents.
 
+## Plugins
 
+Quality-guard and automation plugins that run automatically during OpenCode sessions:
 
-Quality-guard plugins that run automatically during OpenCode sessions:
+| Plugin | Trigger | What it does |
+|---|---|---|
+| `typescript-check.ts` | After `.ts`/`.tsx` edit | Runs `tsc --noEmit` on the nearest tsconfig |
+| `lint-check.ts` | After JS/TS or Python edit | Runs ESLint or ruff; logs warnings |
+| `pre-commit-guard.ts` | Before `git commit` | Blocks debug artifacts and secrets; warns on non-Conventional Commits |
+| `bash-guard.ts` | Before any bash call | Blocks destructive `rm`, `DROP TABLE`, `git push --force`, `git reset --hard` |
+| `todo-progress.ts` | On every TodoWrite update | Logs structured task progress (completed/in-progress/pending) |
+| `compaction.ts` | Before context compaction | Replaces default prompt with a dense continuation brief |
+| `shell-env.ts` | Before every bash call | Injects `PROJECT_ROOT`, `PACKAGE_MANAGER`, `PRIMARY_LANGUAGE` |
+| `session-notify.ts` | `permission.asked` + `session.idle` | macOS desktop notification when approval needed or session finishes |
+| `env-protection.ts` | Before `read`/`edit` | Blocks access to real `.env` files |
+| `flutter-check.ts` | After `.dart` edit | Runs `flutter analyze` or `dart analyze` |
+| `java-check.ts` | After `.java` edit | Runs `mvn compile`; logs errors only |
+| `session-timer.ts` | `session.idle` | Logs elapsed time; flags sessions over 10 minutes |
+| `diff-summary.ts` | `session.idle` | Logs `git diff --stat` summary of files changed this session |
+| `file-backup.ts` | Before `write`/`edit` | Backs up files ≥50 lines to `.opencode/backups/` before overwriting; auto-prunes after 24h |
+| `auto-branch.ts` | Session start + `git commit` | Warns when on a protected branch; blocks commits to `main`/`master`/`develop`/`staging`/`production` |
+| `session-summary.ts` | `session.idle` | Writes a `.md` summary to `.opencode/sessions/` with changed files and pending todos |
+| `stale-todo-guard.ts` | `session.idle` | Warns (log + macOS notification) if todos are still in-progress or pending when the agent stops |
+| `error-rerun.ts` | After failed bash call | Detects transient errors (network, port, missing module, Docker, DB) and retries once after 1.5s |
+| `smart-context.ts` | On assistant message | Auto-injects file contents when the agent references a path that exists on disk (≤300 lines) |
+| `daily-digest.ts` | First `session.created` of the day | Logs today's commit count, active branches, and top changed files |
 
-| Plugin | Trigger |
-|---|---|
-| `typescript-check.ts` | Runs `tsc --noEmit` after TypeScript file edits |
-| `lint-check.ts` | Runs ESLint (JS/TS) or ruff (Python) after file edits |
-| `pre-commit-guard.ts` | Blocks commits with debug artifacts (`console.log`, `debugger`, `print()`, `System.out.println`) |
-| `bash-guard.ts` | Blocks destructive shell commands (rm -rf on root paths, DROP TABLE, git push --force) |
-| `todo-progress.ts` | Logs structured progress on every TodoWrite update |
-| `compaction.ts` | Replaces default compaction prompt with a structured continuation brief |
-| `shell-env.ts` | Injects `PROJECT_ROOT`, `PACKAGE_MANAGER`, `PRIMARY_LANGUAGE` into every bash call |
-| `session-notify.ts` | Desktop notification when a long-running session completes |
-| `env-protection.ts` | Prevents `.env` files from being written or overwritten |
-| `flutter-check.ts` | Runs `flutter analyze` after Dart file edits |
-| `java-check.ts` | Runs `mvn compile` or `gradle compileJava` after Java file edits |
+All plugins respect a `OPENCODE_NO_<PLUGIN>=1` environment variable to disable them individually.
 
 ## MCPs
 

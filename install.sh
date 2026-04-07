@@ -43,6 +43,15 @@ PLUGINS=(
   "shell-env.ts"
   "compaction.ts"
   "todo-progress.ts"
+  "session-timer.ts"
+  "diff-summary.ts"
+  "file-backup.ts"
+  "auto-branch.ts"
+  "session-summary.ts"
+  "stale-todo-guard.ts"
+  "error-rerun.ts"
+  "smart-context.ts"
+  "daily-digest.ts"
 )
 
 TOOLS=(
@@ -320,7 +329,7 @@ echo "  Agents   : $TOTAL_AGENTS"
 echo "  Commands : $TOTAL_COMMANDS  (slash commands, e.g. /plan, /tdd, /review)"
 echo "  Skills   : $TOTAL_SKILLS"
 echo "  Rules    : $TOTAL_RULES  (modular instruction sets)"
-echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, lint-check, pre-commit-guard, bash-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress)"
+echo "  Plugins  : $TOTAL_PLUGINS  (typescript-check, lint-check, pre-commit-guard, bash-guard, session-notify, env-protection, flutter-check, java-check, shell-env, compaction, todo-progress, session-timer, diff-summary, file-backup, auto-branch, session-summary, stale-todo-guard, error-rerun, smart-context, daily-digest)"
 echo "  Tools    : $TOTAL_TOOLS  (run-tests, git-summary, changed-files, security-audit)"
 echo "  MCPs     : sequential-thinking, memory, context7, gh_grep  (configured in opencode.json)"
 
