@@ -1,6 +1,6 @@
 # codme-opencode
 
-Global configuration installer for [OpenCode](https://opencode.ai) — ships 19 specialized agents, 11 slash commands, 29 skills, 20 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
+Global configuration installer for [OpenCode](https://opencode.ai) — ships 20 specialized agents, 16 slash commands, 29 skills, 35 plugins, and 7 rule sets, deployed to `~/.config/opencode/`.
 
 Requires a **GitHub Copilot Pro+** subscription. All agents use the `github-copilot` provider.
 
@@ -28,11 +28,11 @@ Deploys to `~/.config/opencode/`:
 |---|---|
 | `opencode.json` | Global config: model, MCPs, agent definitions, permissions |
 | `AGENTS.md` | Universal agent context template |
-| `agents/` | 19 specialized agents |
-| `commands/` | 11 slash commands |
+| `agents/` | 20 specialized agents |
+| `commands/` | 16 slash commands |
 | `skills/` | 29 skill packs |
 | `rules/` | 7 modular rule sets |
-| `plugins/` | 20 quality-guard and automation plugins |
+| `plugins/` | 35 quality-guard and automation plugins |
 
 Company-specific skills (`company-*`) are never overwritten.
 
@@ -58,6 +58,7 @@ Company-specific skills (`company-*`) are never overwritten.
 | `fix` | grok-code-fast-1 | Diagnose and fix build/test/runtime failures. Max 3 attempts. |
 | `explore` | gpt-5.4-mini | Read-only codebase explorer |
 | `doc-writer` | gpt-5.4-mini | README, JSDoc/TSDoc, OpenAPI, ADR, codemap |
+| `librarian` | claude-sonnet-4.6 | Research specialist: fetches verified docs and OSS patterns via context7 and gh_grep |
 | `write-commit` | gpt-5-mini | Conventional commit message from `git diff --staged`. |
 
 ## Model Strategy
@@ -67,7 +68,7 @@ All agents use the `github-copilot` provider, which routes through your Copilot 
 | Tier | Model | Agents |
 |---|---|---|
 | **Opus** | `claude-opus-4.6` | planner, architect, security-auditor, orchestrator |
-| **Sonnet** | `claude-sonnet-4.6` | code-review, tdd-guide, pr-review _(global default)_ |
+| **Sonnet** | `claude-sonnet-4.6` | code-review, tdd-guide, pr-review, librarian _(global default)_ |
 | **Codex** | `gpt-5.3-codex` | new-feature, refactor, typescript-reviewer, python-reviewer, flutter-reviewer, java-reviewer |
 | **Gemini** | `gemini-2.5-pro` | init-project |
 | **Grok** | `grok-code-fast-1` | build-resolver, fix |
@@ -97,6 +98,11 @@ All agents use the `github-copilot` provider, which routes through your Copilot 
 /verify        — full pipeline: compile → test → coverage → security
 /orchestrate   — multi-agent task decomposition and coordination
 /init-project  — generate AGENTS.md + .opencode/opencode.json
+/commit        — generate conventional commit from staged changes
+/clean-slop    — scan staged changes for AI slop patterns to remove
+/review-work   — full review pipeline: code-review + security + language reviewer in parallel
+/handoff       — structured handoff doc for fast session resumption
+/standup       — daily standup summary from recent commits and changes
 ```
 
 ## Skills
@@ -158,6 +164,21 @@ Quality-guard and automation plugins that run automatically during OpenCode sess
 | `error-rerun.ts` | After failed bash call | Detects transient errors (network, port, missing module, Docker, DB) and retries once after 1.5s |
 | `smart-context.ts` | On assistant message | Auto-injects file contents when the agent references a path that exists on disk (≤300 lines) |
 | `daily-digest.ts` | First `session.created` of the day | Logs today's commit count, active branches, and top changed files |
+| `session-error-notify.ts` | `session.error` | macOS notification + TUI toast on session crashes (model timeout, server crash, invalid response) |
+| `tui-toast.ts` | `session.idle`, `permission.asked`, `session.error`, `todo.updated` | Visual inline TUI toasts for attention events |
+| `lsp-diagnostics.ts` | `lsp.client.diagnostics` | Injects LSP errors/warnings as silent context so the agent sees them without manual compiler runs |
+| `permission-auto-approve.ts` | `permission.asked` | Auto-approves read-only tools (read, glob, grep); always prompts for bash, write, edit |
+| `command-history.ts` | After bash calls | Appends every bash command (timestamp, exit code, output preview) to `.opencode/history/YYYY-MM-DD.log` |
+| `doom-loop-notify.ts` | `permission.asked` (doom_loop) | Log + TUI toast + macOS notification when the agent enters a detected infinite tool loop |
+| `file-watcher.ts` | `file.watcher.updated` | Detects external file changes (debounced 2s); injects a context hint for TypeScript/JS files modified outside the agent |
+| `session-diff.ts` | `session.diff` | Structured diff log using the native platform event — superior to `diff-summary`'s manual git stat |
+| `tui-prompt-shortcuts.ts` | `session.created` | Appends branch name and other context snippets to the TUI prompt automatically on session start |
+| `context-window-monitor.ts` | `session.idle` | Warns at 70% context usage (toast) and at 85% injects a `/checkpoint` suggestion to avoid overflow |
+| `directory-agents-injector.ts` | Before `read`/`edit` | Injects the nearest `AGENTS.md` up the directory tree as a system message for scoped agent context |
+| `directory-readme-injector.ts` | Before `read`/`edit`/`write` | Injects the nearest `README.md` up the directory tree to give the agent module-level context |
+| `preemptive-compaction.ts` | `session.idle` | Triggers context compaction at 78% usage — before the limit — so compaction happens at a clean boundary |
+| `tool-output-truncator.ts` | After bash/grep/find | Caps large tool outputs before they reach context; appends `[truncated — N bytes omitted]` marker |
+| `write-guard.ts` | Before `write`/`edit` | Injects the current file contents if the file hasn't been read this session, preventing silent overwrites |
 
 All plugins respect a `OPENCODE_NO_<PLUGIN>=1` environment variable to disable them individually.
 
