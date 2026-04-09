@@ -60,6 +60,23 @@ export const SessionTimerPlugin: Plugin = async ({ client }) => {
           },
         })
 
+        // Inject /checkpoint suggestion when session is long
+        if (isLong) {
+          try {
+            await (client as any).postSessionByIdMessage({
+              path: { id: sessionId },
+              body: {
+                role: "system",
+                content:
+                  `[session-timer] This session has been running for ${elapsedStr}. ` +
+                  `Consider running /checkpoint to summarize progress, verify the state, and list next steps before continuing.`,
+              },
+            })
+          } catch {
+            // System message injection not available — not fatal
+          }
+        }
+
         return
       }
 

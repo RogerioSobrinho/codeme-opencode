@@ -19,13 +19,24 @@ Apply the same severity tiers and defect categories as the `code-review` agent (
 
 ## Step 1 — Get PR Context
 
+First, detect the base branch automatically:
+
 ```bash
-# Summary of what changed
-git log --oneline main..HEAD
-git diff main...HEAD --stat
+# Detect default remote branch (works for main, master, develop, etc.)
+git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||'
+# Fallback: check common names
+git branch -r | grep -E 'origin/(main|master|develop|dev)$' | head -1 | sed 's|.*origin/||'
+```
+
+Use the detected base branch for all diff operations below. If detection fails, ask the user.
+
+```bash
+# Summary of what changed (replace BASE with detected branch)
+git log --oneline $BASE..HEAD
+git diff $BASE...HEAD --stat
 
 # Full diff
-git diff main...HEAD
+git diff $BASE...HEAD
 
 # Or via GitHub CLI (preferred when available)
 gh pr view $PR_NUMBER
@@ -35,7 +46,7 @@ gh pr diff $PR_NUMBER
 Read surrounding context for changed files — not just the diff hunks:
 
 ```bash
-git diff main...HEAD --name-only   # list of changed files
+git diff $BASE...HEAD --name-only   # list of changed files
 ```
 
 For each changed file, read the full function or class that was modified (not just the diff) to catch logic errors that span outside the diff boundary.

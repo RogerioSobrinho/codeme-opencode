@@ -44,9 +44,11 @@ export const TypeScriptCheckPlugin: Plugin = async ({ $, client }) => {
 
       // Run in the background — never block the agent
       try {
-        await $`tsc --noEmit --project ${tsconfig} 2>&1 | head -40`.quiet()
+        await $`tsc --noEmit --project ${tsconfig}`.quiet()
       } catch (err: unknown) {
-        const output = (err as { stdout?: string })?.stdout ?? String(err)
+        const raw = (err as { stdout?: string })?.stdout ?? (err as { stderr?: string })?.stderr ?? String(err)
+        // Cap at 40 lines to keep context noise low (avoid bash pipeline which Bun may not support)
+        const output = raw.split("\n").slice(0, 40).join("\n")
         if (output.trim()) {
           await client.app.log({
             body: {

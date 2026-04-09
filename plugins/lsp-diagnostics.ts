@@ -45,8 +45,11 @@ export const LspDiagnosticsPlugin: Plugin = async ({ client }) => {
   const MAX_DIAG = parseInt(process.env.OPENCODE_LSP_DIAG_MAX ?? "20", 10)
   const ERRORS_ONLY = process.env.OPENCODE_LSP_DIAG_ERRORS_ONLY === "1"
 
-  // Rastreia a sessão ativa mais recente
-  let activeSessionId: string | null = null
+  // Tracks active sessions — Map<sessionId, true> for all live sessions
+  // The most recently created session receives LSP diagnostics.
+  // Using a Map (not a single variable) prevents multi-session corruption.
+  const activeSessions = new Map<string, boolean>()
+  let lastCreatedSessionId: string | null = null
 
   // Deduplica por sessão: Set de "file:line:message"
   const injectedBySession = new Map<string, Set<string>>()
@@ -78,18 +81,26 @@ export const LspDiagnosticsPlugin: Plugin = async ({ client }) => {
         event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
 
       if (event.type === "session.created") {
-        activeSessionId = sessionId
+        activeSessions.set(sessionId, true)
+        lastCreatedSessionId = sessionId
         return
       }
 
       if (event.type === "session.deleted") {
         injectedBySession.delete(sessionId)
-        if (activeSessionId === sessionId) activeSessionId = null
+        activeSessions.delete(sessionId)
+        if (lastCreatedSessionId === sessionId) {
+          // Fall back to any remaining session (arbitrary but safe)
+          lastCreatedSessionId = activeSessions.size > 0
+            ? [...activeSessions.keys()][activeSessions.size - 1]
+            : null
+        }
         return
       }
 
       if (event.type !== "lsp.client.diagnostics") return
-      if (!activeSessionId) return
+      if (!lastCreatedSessionId) return
+      const activeSessionId = lastCreatedSessionId
 
       // Extrai diagnósticos do evento
       const uri: string = event.properties?.uri ?? event.properties?.file ?? ""

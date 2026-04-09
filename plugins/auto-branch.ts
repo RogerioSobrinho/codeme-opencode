@@ -76,17 +76,20 @@ export const AutoBranchPlugin: Plugin = async ({ $, client }) => {
       if (input.tool !== "bash") return
 
       const command: string = (output.args as { command?: string }).command ?? ""
-      if (!command.includes("git commit")) return
+      const isCommit = command.includes("git commit")
+      const isPush = command.includes("git push")
+      if (!isCommit && !isPush) return
       if (!(await isGitRepo($))) return
 
       const branch = await getCurrentBranch($)
       if (!branch || !protected_.has(branch)) return
 
+      const action = isPush ? "push to" : "commit directly to"
       throw new Error(
-        `[auto-branch] BLOCKED: Attempted to commit directly to protected branch "${branch}".\n` +
+        `[auto-branch] BLOCKED: Attempted to ${action} protected branch "${branch}".\n` +
         `Create a feature branch first:\n` +
         `  git checkout -b feat/<description>\n` +
-        `Then commit on the new branch.\n` +
+        `Then commit and push on the new branch.\n` +
         `To disable this check: set OPENCODE_AUTO_BRANCH=0`,
       )
     },

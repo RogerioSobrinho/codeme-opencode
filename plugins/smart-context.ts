@@ -47,7 +47,15 @@ const TEXT_EXTENSIONS = new Set([
 ])
 
 // Matches file paths: relative (src/foo.ts), absolute (/home/...), or ./relative
+// Requires at least one slash OR a known extension to reduce false positives (e.g. "v1.2.3")
 const FILE_PATH_RE = /(?:^|[\s`"'(])((\.{0,2}\/[\w./\-]+|[\w][\w./\-]*\.\w{1,6}))(?=[\s`"'),]|$)/gm
+
+function looksLikePath(p: string): boolean {
+  // Must have a slash (relative/absolute) OR a known text extension
+  if (p.includes("/")) return true
+  const ext = path.extname(p).toLowerCase()
+  return TEXT_EXTENSIONS.has(ext)
+}
 
 function isTextFile(filePath: string): boolean {
   const ext = path.extname(filePath).toLowerCase()
@@ -65,7 +73,7 @@ function extractPaths(text: string): string[] {
   FILE_PATH_RE.lastIndex = 0
   while ((match = FILE_PATH_RE.exec(text)) !== null) {
     const p = match[1]
-    if (p && p.length > 3) found.add(p)
+    if (p && p.length > 3 && looksLikePath(p)) found.add(p)
   }
   return [...found]
 }

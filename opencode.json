@@ -77,7 +77,7 @@
     "doom_loop": "deny"
   },
 
-  "default_agent": "build",
+  "default_agent": "build-resolver",
 
   "agent": {
     "planner": {
@@ -394,6 +394,27 @@
       "prompt": "{file:./agents/init-project.md}",
       "permission": {
         "context7_*": "allow",
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "rm *": "deny"
+        }
+      }
+    },
+
+    "librarian": {
+      "description": "Research specialist. Fetches verified documentation, real-world usage examples, and OSS code patterns using context7 (official docs) and gh_grep (real GitHub code). Use before implementing with an unfamiliar library, debugging unexpected API behavior, or finding idiomatic usage patterns.",
+      "mode": "subagent",
+      "model": "github-copilot/claude-sonnet-4.6",
+      "color": "#fb923c",
+      "temperature": 0.1,
+      "prompt": "{file:./agents/librarian.md}",
+      "permission": {
+        "context7_*": "allow",
+        "gh_grep_*": "allow",
+        "memory_*": "allow",
+        "edit": "deny",
         "bash": {
           "*": "allow",
           "git commit*": "deny",

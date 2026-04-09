@@ -18,6 +18,9 @@ import type { Plugin } from "@opencode-ai/plugin"
  * Non-transient errors (syntax errors, test failures, type errors) are passed
  * through immediately — no retry, no delay.
  *
+ * Safety: commands with side effects (publish, push, deploy, send, insert, update,
+ * delete, drop) are never retried — a retry could duplicate a destructive action.
+ *
  * Configuration:
  *   OPENCODE_RERUN_DELAY_MS  — wait before retry in ms (default: 1500)
  *   OPENCODE_NO_RERUN=1      — disable the plugin entirely
@@ -71,6 +74,28 @@ const PERMANENT_PATTERNS = [
   /authentication failed/i,
 ]
 
+// Commands with side effects must never be retried — a duplicate run could be destructive
+const SIDE_EFFECT_PATTERNS = [
+  /\bgit\s+push\b/,
+  /\bnpm\s+publish\b/,
+  /\bpnpm\s+publish\b/,
+  /\byarn\s+publish\b/,
+  /\bbun\s+publish\b/,
+  /\bdeploy\b/i,
+  /\bsend\b/i,
+  /\bcurl\b.*-X\s*(POST|PUT|PATCH|DELETE)/i,
+  /\bwget\b.*--post/i,
+  /\bINSERT\s+INTO\b/i,
+  /\bUPDATE\s+\w+\s+SET\b/i,
+  /\bDELETE\s+FROM\b/i,
+  /\bDROP\s+(TABLE|DATABASE|SCHEMA)\b/i,
+  /\bTRUNCATE\b/i,
+]
+
+function hasSideEffect(command: string): boolean {
+  return SIDE_EFFECT_PATTERNS.some((p) => p.test(command))
+}
+
 function isTransient(output: string): boolean {
   if (PERMANENT_PATTERNS.some((p) => p.test(output))) return false
   return TRANSIENT_PATTERNS.some((p) => p.test(output))
@@ -100,6 +125,9 @@ export const ErrorRerunPlugin: Plugin = async ({ $, client }) => {
       if (!isTransient(combined)) return
 
       const command: string = (input.args as { command?: string })?.command ?? ""
+
+      // Never retry commands with side effects — a duplicate run could be destructive
+      if (hasSideEffect(command)) return
 
       await client.app.log({
         body: {

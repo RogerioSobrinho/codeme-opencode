@@ -79,6 +79,25 @@ export const DoomLoopNotifyPlugin: Plugin = async ({ client, $ }) => {
       } catch {
         // Not macOS or osascript unavailable — not fatal
       }
+
+      // Inject escape hint so the agent knows what to do next
+      try {
+        const sessionId: string =
+          event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
+        await (client as any).postSessionByIdMessage({
+          path: { id: sessionId },
+          body: {
+            role: "system",
+            content:
+              `[doom-loop-notify] You have called "${repeatedTool}" 3 times with identical input. ` +
+              `This call has been blocked to prevent an infinite loop. ` +
+              `Stop repeating this action. Instead: (1) re-read the relevant file to verify your assumptions, ` +
+              `(2) try a different approach, or (3) ask the user for clarification.`,
+          },
+        })
+      } catch {
+        // System message injection not supported or session unavailable — not fatal
+      }
     },
   }
 }

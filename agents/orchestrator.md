@@ -42,6 +42,9 @@ You receive a complex task that is too large or multi-faceted for a single agent
 | `pr-review` | Pull request review via git diff |
 | `typescript-reviewer` | TypeScript/React-specific review |
 | `python-reviewer` | Python/FastAPI-specific review |
+| `flutter-reviewer` | Flutter/Dart + Riverpod-specific review |
+| `java-reviewer` | Java 21 / Spring Boot 3.x-specific review |
+| `librarian` | Fetch verified docs and real-world OSS patterns via context7 + gh_grep |
 | `init-project` | Bootstrap AGENTS.md + opencode.json for a project |
 | `write-commit` | Generate conventional commit message from staged diff |
 

@@ -142,6 +142,21 @@ export const DailyDigestPlugin: Plugin = async ({ $, client, worktree }) => {
           },
         },
       })
+
+      // Inject digest as a system message so the agent has context on startup
+      const sessionId: string =
+        event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
+      try {
+        await (client as any).postSessionByIdMessage({
+          path: { id: sessionId },
+          body: {
+            role: "system",
+            content: `[daily-digest] ${lines.join("\n")}`,
+          },
+        })
+      } catch {
+        // System message injection not available — digest already in log
+      }
     },
   }
 }

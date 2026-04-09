@@ -116,6 +116,15 @@ export const FileWatcherPlugin: Plugin = async ({ client }) => {
 
   return {
     event: async ({ event }: { event: any }) => {
+      const sessionId: string =
+        event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
+
+      // Clean up per-session state on delete
+      if (event.type === "session.deleted") {
+        injectedPerSession.delete(sessionId)
+        return
+      }
+
       if (event.type !== "file.watcher.updated") return
 
       const filePath: string =
@@ -125,9 +134,6 @@ export const FileWatcherPlugin: Plugin = async ({ client }) => {
         ""
 
       if (!filePath) return
-
-      const sessionId: string =
-        event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
 
       // Debounce: 2s window to batch rapid saves (e.g., auto-formatters)
       const existing = debounceTimers.get(filePath)
@@ -139,12 +145,6 @@ export const FileWatcherPlugin: Plugin = async ({ client }) => {
       }, 2000)
 
       debounceTimers.set(filePath, timer)
-    },
-
-    event_cleanup: async () => {
-      for (const timer of debounceTimers.values()) clearTimeout(timer)
-      debounceTimers.clear()
-      injectedPerSession.clear()
     },
   }
 }

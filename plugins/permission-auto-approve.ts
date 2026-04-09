@@ -45,6 +45,11 @@ const DEFAULT_AUTO_APPROVE_TOOLS = new Set([
   "mcp__context7__resolve-library-id",
   "mcp__context7__get-library-docs",
   "mcp__sequential-thinking__sequentialthinking",
+  // gh_grep read-only search tools
+  "mcp__gh_grep__search",
+  "mcp__gh_grep__code_search",
+  "gh_grep_search",
+  "gh_grep_code_search",
 ])
 
 function buildApproveSet(): Set<string> {

@@ -21,9 +21,20 @@ import type { Plugin } from "@opencode-ai/plugin"
  *          or in .opencode/plugins/              (per-project)
  */
 export const DiffSummaryPlugin: Plugin = async ({ $, client }) => {
+  const DEBOUNCE_MS = 60_000 // skip if last diff was fired less than 60s ago
+  const lastFiredAt = new Map<string, number>()
+
   return {
     event: async ({ event }: { event: any }) => {
       if (event.type !== "session.idle") return
+
+      const sessionId: string =
+        event.sessionID ?? event.session_id ?? event.properties?.sessionId ?? "unknown"
+
+      const now = Date.now()
+      const last = lastFiredAt.get(sessionId) ?? 0
+      if (now - last < DEBOUNCE_MS) return
+      lastFiredAt.set(sessionId, now)
 
       let stat = ""
       let nameStatus = ""
